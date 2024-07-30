@@ -1,14 +1,11 @@
 package ru.practicum;
 
-import lombok.AccessLevel;
-import lombok.Data;
-import lombok.NoArgsConstructor;
-import lombok.RequiredArgsConstructor;
+import lombok.*;
 import lombok.experimental.FieldDefaults;
 
 @Data
 @FieldDefaults(makeFinal = false, level = AccessLevel.PRIVATE)
-@RequiredArgsConstructor
+@AllArgsConstructor
 @NoArgsConstructor
 public class ViewStats {
     String app;  // Название сервиса
