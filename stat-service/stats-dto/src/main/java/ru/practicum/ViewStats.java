@@ -5,6 +5,7 @@ import lombok.experimental.FieldDefaults;
 
 @Data
 @FieldDefaults(makeFinal = false, level = AccessLevel.PRIVATE)
+@Builder
 @AllArgsConstructor
 @NoArgsConstructor
 public class ViewStats {

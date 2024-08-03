@@ -1,25 +1,45 @@
 package ru.practicum.controller;
 
-import lombok.AllArgsConstructor;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.format.annotation.DateTimeFormat;
+import org.springframework.web.bind.annotation.*;
 import ru.practicum.EndpointHit;
+import ru.practicum.ViewStats;
+import ru.practicum.ViewStatsRequest;
 import ru.practicum.service.StatsService;
+
+import java.time.LocalDateTime;
+import java.util.List;
 
 @RestController
 @RequestMapping
 @Slf4j
-@AllArgsConstructor
+@RequiredArgsConstructor
 public class StatsController {
-    StatsService service;
+
+    private final StatsService service;
 
     @PostMapping("/hit")
-    public EndpointHit saveHit(@RequestBody EndpointHit endpointHit) {
+    public void saveHit(@RequestBody EndpointHit endpointHit) {
         log.info("Поступил запрос на создание EndpointHit");
-        return service.saveHit(endpointHit);
+        service.saveHit(endpointHit);
+    }
+
+    @GetMapping("/stats")
+    public List<ViewStats> getViewStats(@RequestParam @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm:ss") LocalDateTime start,
+                                        @RequestParam @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm:ss") LocalDateTime end,
+                                        @RequestParam(required = false) List<String> uris,
+                                        @RequestParam(defaultValue = "false") boolean unique) {
+        log.info("Поступил запрос на получение ViewStats");
+        ViewStatsRequest request = ViewStatsRequest.builder()
+                .start(start)
+                .end(end)
+                .uris(uris)
+                .unique(unique)
+                .build();
+        List<ViewStats> result = service.getViewStats(request);
+        return result;
     }
 
 }
