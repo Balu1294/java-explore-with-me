@@ -8,6 +8,8 @@ import java.util.List;
 
 public interface StatsRepository {
     void saveRequest(EndpointHit endpointHit);
+
     List<ViewStats> getViewStats(ViewStatsRequest viewStatsRequest);
+
     List<ViewStats> getUniqueViewStats(ViewStatsRequest request);
 }

@@ -7,6 +7,7 @@ import ru.practicum.ViewStatsRequest;
 import java.util.List;
 
 public interface StatsService {
- void saveHit(EndpointHit endpointHit);
- List<ViewStats> getViewStats(ViewStatsRequest request);
+    void saveHit(EndpointHit endpointHit);
+
+    List<ViewStats> getViewStats(ViewStatsRequest request);
 }
