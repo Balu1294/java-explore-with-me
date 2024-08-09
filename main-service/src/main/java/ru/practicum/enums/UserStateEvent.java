@@ -1,4 +1,5 @@
 package ru.practicum.enums;
 
-public class UserStateEvent {
+public enum UserStateEvent {
+    SEND_TO_REVIEW, CANCEL_REVIEW;
 }
