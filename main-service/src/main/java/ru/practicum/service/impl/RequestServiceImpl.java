@@ -4,8 +4,9 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import ru.practicum.dto.ParticipationRequestDto;
 import ru.practicum.enums.EventStatus;
-import ru.practicum.enums.Status;
+import ru.practicum.enums.RequestStatus;
 import ru.practicum.exception.ClashException;
+import ru.practicum.exception.IncorrectParametersException;
 import ru.practicum.exception.NotFoundException;
 import ru.practicum.model.Event;
 import ru.practicum.model.Request;
@@ -51,15 +52,15 @@ public class RequestServiceImpl implements RequestService {
         request.setEvent(event);
 
         if (event.isRequestModeration()) {
-            request.setStatus(Status.PENDING);
+            request.setStatus(RequestStatus.PENDING);
         } else {
-            request.setStatus(Status.CONFIRMED);
+            request.setStatus(RequestStatus.CONFIRMED);
         }
 
         requestRepository.save(request);
 
         if (event.getParticipantLimit() == 0) {
-            request.setStatus(Status.CONFIRMED);
+            request.setStatus(RequestStatus.CONFIRMED);
         }
 
         return toParticipationRequestDto(request);
@@ -71,10 +72,10 @@ public class RequestServiceImpl implements RequestService {
                 new NotFoundException(String.format("Пользователя с id: %d не существует", userId)));
         Request request = requestRepository.findByIdAndRequesterId(requestId, userId).orElseThrow(
                 () -> new NotFoundException("Запрос с id= " + requestId + " не найден"));
-        if (request.getStatus().equals(Status.CANCELED) || request.getStatus().equals(Status.REJECTED)) {
-            throw new ClashException(String.format("Запрос с id: %d не подтвержден", requestId));
+        if (request.getStatus().equals(RequestStatus.CANCELED) || request.getStatus().equals(RequestStatus.REJECTED)) {
+            throw new IncorrectParametersException(String.format("Запрос с id: %d не подтвержден", requestId));
         }
-        request.setStatus(Status.CANCELED);
+        request.setStatus(RequestStatus.CANCELED);
         Request requestAfterSave = requestRepository.save(request);
         return toParticipationRequestDto(requestAfterSave);
     }
@@ -84,7 +85,7 @@ public class RequestServiceImpl implements RequestService {
             throw new ClashException(String.format("Пользователь с id: %d не инициатор события", userId));
         }
         if (event.getParticipantLimit() > 0 && event.getParticipantLimit() <=
-                requestRepository.countByEventIdAndStatus(eventId, Status.CONFIRMED)) {
+                requestRepository.countByEventIdAndStatus(eventId, RequestStatus.CONFIRMED)) {
             throw new ClashException("Превышен лимит участников события");
         }
         if (!event.getEventStatus().equals(EventStatus.PUBLISHED)) {

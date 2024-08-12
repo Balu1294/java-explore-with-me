@@ -6,6 +6,7 @@ import lombok.experimental.FieldDefaults;
 import ru.practicum.dto.CategoryDto;
 import ru.practicum.dto.LocationDto;
 import ru.practicum.dto.UserShortDto;
+import ru.practicum.enums.EventStatus;
 
 import java.time.LocalDateTime;
 
@@ -15,7 +16,7 @@ import java.time.LocalDateTime;
 @Builder
 @FieldDefaults(level = AccessLevel.PRIVATE)
 public class EventFullDto {
-    Long id;
+    Integer id;
     String annotation;
     CategoryDto category;
     Integer confirmedRequests;

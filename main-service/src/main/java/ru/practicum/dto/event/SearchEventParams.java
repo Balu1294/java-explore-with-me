@@ -15,7 +15,7 @@ import java.util.List;
 @AllArgsConstructor
 public class SearchEventParams {
     private String text;
-    private List<Long> categories;
+    private List<Integer> categories;
     private Boolean paid;
     @JsonFormat
             (shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd HH:mm:ss")

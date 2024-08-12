@@ -8,7 +8,9 @@ import ru.practicum.dto.NewCategoryDto;
 import ru.practicum.exception.ClashException;
 import ru.practicum.exception.NotFoundException;
 import ru.practicum.model.Category;
+import ru.practicum.model.Event;
 import ru.practicum.repository.CategoryRepository;
+import ru.practicum.repository.EventRepository;
 import ru.practicum.service.CategoryService;
 
 import java.util.List;
@@ -21,6 +23,7 @@ import static ru.practicum.mapper.CategoryMapper.toCategoryDto;
 @RequiredArgsConstructor
 public class CategoryServiceImpl implements CategoryService {
     public final CategoryRepository categoryRepository;
+    private final EventRepository eventsRepository;
 
     @Override
     public CategoryDto addCategory(NewCategoryDto newCategoryDto) {
@@ -44,7 +47,11 @@ public class CategoryServiceImpl implements CategoryService {
 
     @Override
     public void removeCategory(Integer id) {
-        findById(id);
+        Category category = findById(id);
+        List<Event> events = eventsRepository.findByCategory(category);
+        if (!events.isEmpty()) {
+            throw new ClashException("Can't delete category due to using for some events");
+        }
         categoryRepository.deleteById(id);
     }
 
@@ -55,6 +62,7 @@ public class CategoryServiceImpl implements CategoryService {
                 .map(category -> toCategoryDto(category))
                 .collect(Collectors.toList());
     }
+
     @Override
     public Category findById(Integer id) {
         return categoryRepository.findById(id).orElseThrow(() ->

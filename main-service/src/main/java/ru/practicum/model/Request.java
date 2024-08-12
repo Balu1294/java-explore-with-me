@@ -1,7 +1,7 @@
 package ru.practicum.model;
 
 import lombok.*;
-import ru.practicum.enums.Status;
+import ru.practicum.enums.RequestStatus;
 
 import javax.persistence.*;
 import java.time.LocalDateTime;
@@ -30,5 +30,5 @@ public class Request {
 
     @Enumerated(EnumType.STRING)
     @Column(name = "status", nullable = false)
-    Status status;
+    RequestStatus status;
 }

@@ -14,9 +14,9 @@ import java.util.List;
 @NoArgsConstructor
 @AllArgsConstructor
 public class SearchEventParamsAdmin {
-    private List<Long> users;
+    private List<Integer> users;
     private List<String> states;
-    private List<Long> categories;
+    private List<Integer> categories;
     @JsonFormat
             (shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd HH:mm:ss")
     private LocalDateTime rangeStart;

@@ -24,12 +24,14 @@ import static ru.practicum.mapper.UserMapper.toUserDto;
 public class UserServiceImpl implements UserService {
     private final UserRepository userRepository;
 
+    @Transactional
     @Override
     public UserDto addNewUser(NewUserRequest newUserRequest) {
         User user = userRepository.save(toUser(newUserRequest));
         return toUserDto(user);
     }
 
+    @Transactional
     @Override
     public void removeUser(Integer userId) {
         checkUser(userId);

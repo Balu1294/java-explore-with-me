@@ -1,7 +1,7 @@
 package ru.practicum.dto.event;
 
 import lombok.*;
-import ru.practicum.enums.Status;
+import ru.practicum.enums.RequestStatus;
 
 import java.util.Set;
 
@@ -11,6 +11,6 @@ import java.util.Set;
 @AllArgsConstructor
 @Builder
 public class EventRequestStatusUpdateRequest {
-    private Set<Long> requestIds;
-    private Status status;
+    private Set<Integer> requestIds;
+    private RequestStatus status;
 }

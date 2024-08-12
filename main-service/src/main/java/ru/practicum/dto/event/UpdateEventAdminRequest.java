@@ -5,7 +5,7 @@ import ru.practicum.enums.AdminStateEvent;
 
 @Getter
 @Setter
-@RequiredArgsConstructor
+@AllArgsConstructor
 @NoArgsConstructor
 public class UpdateEventAdminRequest extends UpdateEventRequest {
 

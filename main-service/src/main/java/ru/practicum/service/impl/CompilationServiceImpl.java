@@ -7,7 +7,7 @@ import org.springframework.transaction.annotation.Transactional;
 import ru.practicum.dto.CompilationDto;
 import ru.practicum.dto.NewCompilationDto;
 import ru.practicum.dto.UpdateCompilationRequest;
-import ru.practicum.exception.ClashException;
+import ru.practicum.exception.IncorrectParametersException;
 import ru.practicum.exception.NotFoundException;
 import ru.practicum.model.Compilation;
 import ru.practicum.model.Event;
@@ -23,7 +23,7 @@ import static ru.practicum.mapper.CompilationMapper.toCompilationDto;
 
 @Service
 @RequiredArgsConstructor
-@Transactional
+@Transactional(readOnly = true)
 public class CompilationServiceImpl implements CompilationService {
     private final CompilationRepository compilationRepository;
     private final EventRepository eventRepository;
@@ -80,7 +80,7 @@ public class CompilationServiceImpl implements CompilationService {
 
         compilation.setPinned(Optional.ofNullable(updateCompilation.getIsPinned()).orElse(compilation.getPinned()));
         if (compilation.getTitle().isBlank()) {
-            throw new ClashException("Title не может состоять из пробелов");
+            throw new IncorrectParametersException("Title не может состоять из пробелов");
         }
         compilation.setTitle(Optional.ofNullable(updateCompilation.getTitle()).orElse(compilation.getTitle()));
 

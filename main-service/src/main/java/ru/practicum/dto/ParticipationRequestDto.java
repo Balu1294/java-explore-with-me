@@ -6,7 +6,7 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.experimental.FieldDefaults;
-import ru.practicum.enums.Status;
+import ru.practicum.enums.RequestStatus;
 
 import java.time.LocalDateTime;
 
@@ -20,5 +20,5 @@ public class ParticipationRequestDto {
     LocalDateTime created;
     Integer eventId;
     Integer requestorId;
-    Status status;
+    RequestStatus status;
 }
