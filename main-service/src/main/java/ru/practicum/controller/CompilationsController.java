@@ -37,8 +37,7 @@ public class CompilationsController {
     @GetMapping("/compilations/{com-id}")
     public CompilationDto getCompilationById(@PathVariable("com-id") Integer comId) {
         log.info("Поступил запрос на получение compilation c id: {}", comId);
-        Compilation compilation = service.findByIdCompilation(comId);
-        return toCompilationDto(compilation);
+        return service.findByIdCompilation(comId);
     }
 
     @PostMapping("/admin/compilations")

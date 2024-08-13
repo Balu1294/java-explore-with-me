@@ -27,7 +27,7 @@ public class StatsServiceImpl implements StatsService {
         if (request.getUris() == null) {
             request.setUris(Collections.emptyList());
         }
-        if (request.getUnique()) {
+        if (request.isUnique()) {
             return statsRepository.getUniqueViewStats(request);
         }
         return statsRepository.getViewStats(request);

@@ -27,14 +27,16 @@ public class UserServiceImpl implements UserService {
     @Transactional
     @Override
     public UserDto addNewUser(NewUserRequest newUserRequest) {
-        User user = userRepository.save(toUser(newUserRequest));
-        return toUserDto(user);
+        User user = userRepository.save(UserMapper.toUser(newUserRequest));
+        return UserMapper.toUserDto(user);
     }
 
     @Transactional
     @Override
     public void removeUser(Integer userId) {
-        checkUser(userId);
+        if (!userRepository.existsById(userId)) {
+            throw new NotFoundException("Пользователь с id= " + userId + " не найден");
+        }
         userRepository.deleteById(userId);
     }
 
@@ -44,10 +46,5 @@ public class UserServiceImpl implements UserService {
         return (ids != null) ? userRepository.findByIdIn(ids, page)
                 .stream().map(UserMapper::toUserDto).collect(Collectors.toList()) : userRepository.findAll(page)
                 .stream().map(UserMapper::toUserDto).collect(Collectors.toList());
-    }
-
-    private void checkUser(Integer userId) {
-        userRepository.findById(userId).orElseThrow(() ->
-                new NotFoundException(String.format("Пользователя с id: %d  не существует.", userId)));
     }
 }

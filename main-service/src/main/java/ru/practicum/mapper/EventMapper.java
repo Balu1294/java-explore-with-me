@@ -48,7 +48,7 @@ public class EventMapper {
                 .category(CategoryMapper.toCategoryDto(event.getCategory()))
                 .eventDate(event.getEventDate())
                 .initiator(UserMapper.toUserShortDto(event.getInitiator()))
-                .isPaid(event.isPaid())
+                .paid(event.isPaid())
                 .title(event.getTitle())
                 .build();
     }

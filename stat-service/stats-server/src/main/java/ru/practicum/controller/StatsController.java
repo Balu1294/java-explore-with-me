@@ -29,7 +29,7 @@ public class StatsController {
     @GetMapping("/stats")
     public List<ViewStats> getViewStats(@RequestParam @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm:ss") LocalDateTime start,
                                         @RequestParam @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm:ss") LocalDateTime end,
-                                        @RequestParam(required = false) List<String> uris,
+                                        @RequestParam(defaultValue = "") List<String> uris,
                                         @RequestParam(defaultValue = "false") boolean unique) {
         log.info("Поступил запрос на получение ViewStats");
         ViewStatsRequest request = ViewStatsRequest.builder()

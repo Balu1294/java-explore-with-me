@@ -10,7 +10,7 @@ import java.util.stream.Collectors;
 public class CompilationMapper {
     public static Compilation toCompilation(NewCompilationDto newCompilationDto) {
         return Compilation.builder()
-                .pinned(newCompilationDto.getIsPinned())
+                .pinned(newCompilationDto.getPinned())
                 .title(newCompilationDto.getTitle())
                 .build();
     }

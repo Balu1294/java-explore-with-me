@@ -1,17 +1,15 @@
 package ru.practicum.dto.event;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
-import lombok.AccessLevel;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Data;
+import lombok.*;
 import lombok.experimental.FieldDefaults;
 import ru.practicum.dto.CategoryDto;
 import ru.practicum.dto.UserShortDto;
 
 import java.time.LocalDateTime;
 
-@Data
+@Getter
+@Setter
 @AllArgsConstructor
 @Builder
 @FieldDefaults(makeFinal = false, level = AccessLevel.PRIVATE)
@@ -23,7 +21,7 @@ public class EventShortDto {
     @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd HH:mm:ss")
     LocalDateTime eventDate;
     UserShortDto initiator;
-    Boolean isPaid;
+    Boolean paid;
     String title;
     Integer views;
 }

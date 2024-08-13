@@ -9,6 +9,7 @@ import ru.practicum.dto.NewCompilationDto;
 import ru.practicum.dto.UpdateCompilationRequest;
 import ru.practicum.exception.IncorrectParametersException;
 import ru.practicum.exception.NotFoundException;
+import ru.practicum.mapper.CompilationMapper;
 import ru.practicum.model.Compilation;
 import ru.practicum.model.Event;
 import ru.practicum.repository.CompilationRepository;
@@ -28,31 +29,10 @@ public class CompilationServiceImpl implements CompilationService {
     private final CompilationRepository compilationRepository;
     private final EventRepository eventRepository;
 
-    @Override
-    public List<CompilationDto> getCompilations(Boolean pinned, Integer from, Integer size) {
-        PageRequest page = PageRequest.of(from, size);
-        List<Compilation> compilations;
-        if (pinned == null) {
-            compilations = compilationRepository.findAll(page).getContent();
-        } else {
-            compilations = compilationRepository.findAllByPinned(pinned, page);
-        }
-
-        return compilations.stream()
-                .map(compilation -> toCompilationDto(compilation))
-                .collect(Collectors.toList());
-    }
-
-    @Override
-    public Compilation findByIdCompilation(Integer compId) {
-        return compilationRepository.findById(compId).orElseThrow(
-                () -> new NotFoundException(String.format("Compilation с id: %d не существует", compId)));
-    }
-
     @Transactional
     @Override
     public CompilationDto addCompilation(NewCompilationDto compilationDto) {
-        Compilation compilation = toCompilation(compilationDto);
+        Compilation compilation = CompilationMapper.toCompilation(compilationDto);
         compilation.setPinned(Optional.ofNullable(compilation.getPinned()).orElse(false));
 
         Set<Integer> compEventIds = (compilationDto.getEvents() != null) ? compilationDto.getEvents() : Collections.emptySet();
@@ -62,15 +42,15 @@ public class CompilationServiceImpl implements CompilationService {
         compilation.setEvents(eventsSet);
 
         Compilation compilationAfterSave = compilationRepository.save(compilation);
-        return toCompilationDto(compilationAfterSave);
+        return CompilationMapper.toCompilationDto(compilationAfterSave);
     }
 
     @Transactional
     @Override
-    public CompilationDto updateCompilation(Integer compId, UpdateCompilationRequest updateCompilation) {
-        Compilation compilation = findByIdCompilation(compId);
+    public CompilationDto updateCompilation(Integer compId, UpdateCompilationRequest update) {
+        Compilation compilation = checkCompilation(compId);
 
-        Set<Integer> eventIds = updateCompilation.getEventsId();
+        Set<Integer> eventIds = update.getEvents();
 
         if (eventIds != null) {
             List<Event> events = eventRepository.findAllByIdIn(new ArrayList<>(eventIds));
@@ -78,19 +58,46 @@ public class CompilationServiceImpl implements CompilationService {
             compilation.setEvents(eventSet);
         }
 
-        compilation.setPinned(Optional.ofNullable(updateCompilation.getIsPinned()).orElse(compilation.getPinned()));
+        compilation.setPinned(Optional.ofNullable(update.getPinned()).orElse(compilation.getPinned()));
         if (compilation.getTitle().isBlank()) {
             throw new IncorrectParametersException("Title не может состоять из пробелов");
         }
-        compilation.setTitle(Optional.ofNullable(updateCompilation.getTitle()).orElse(compilation.getTitle()));
+        compilation.setTitle(Optional.ofNullable(update.getTitle()).orElse(compilation.getTitle()));
 
-        return toCompilationDto(compilation);
+        return CompilationMapper.toCompilationDto(compilation);
     }
 
     @Transactional
     @Override
     public void deleteCompilation(Integer compId) {
-        findByIdCompilation(compId);
+        checkCompilation(compId);
         compilationRepository.deleteById(compId);
+    }
+
+    @Override
+    public List<CompilationDto> getCompilations(Boolean pinned, Integer from, Integer size) {
+
+        PageRequest pageRequest = PageRequest.of(from, size);
+        List<Compilation> compilations;
+        if (pinned == null) {
+            compilations = compilationRepository.findAll(pageRequest).getContent();
+        } else {
+            compilations = compilationRepository.findAllByPinned(pinned, pageRequest);
+        }
+
+        return compilations.stream()
+                .map(CompilationMapper::toCompilationDto)
+                .collect(Collectors.toList());
+    }
+
+
+    @Override
+    public CompilationDto findByIdCompilation(Integer compId) {
+        return CompilationMapper.toCompilationDto(checkCompilation(compId));
+    }
+
+    private Compilation checkCompilation(Integer compId) {
+        return compilationRepository.findById(compId).orElseThrow(
+                () -> new NotFoundException("Compilation с id = " + compId + " не найден"));
     }
 }

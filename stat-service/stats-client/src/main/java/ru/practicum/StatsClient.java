@@ -39,15 +39,10 @@ public class StatsClient extends BaseClient {
         StringBuilder uriBuilder = new StringBuilder("/stats?start={start}&end={end}");
         Map<String, Object> parameters = Map.of(
                 "start", start.format(formatter),
-                "end", end.format(formatter)
+                "end", end.format(formatter),
+                "uris", String.join(",", uris),
+                "unique", unique
         );
-
-        if (uris != null) {
-            parameters.put("uris", String.join(",", uris));
-        }
-        if (unique) {
-            parameters.put("unique", true);
-        }
-        return get(uriBuilder.toString(), parameters);
+        return get("/stats?start={start}&end={end}&uris={uris}&unique={unique}", parameters);
     }
 }

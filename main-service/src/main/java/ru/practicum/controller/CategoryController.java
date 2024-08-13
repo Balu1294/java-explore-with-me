@@ -26,13 +26,13 @@ public class CategoryController {
     @PostMapping("/admin/categories")
     public CategoryDto addCategory(@RequestBody @Valid NewCategoryDto newCategoryDto) {
         log.info("Поступил запрос на создание категории {}", newCategoryDto.getName());
-        return service.addCategory(newCategoryDto);
+        return service.addNewCategory(newCategoryDto);
     }
 
     @DeleteMapping("/admin/categories/{cat-id}")
     public void removeCategoryById(@PathVariable("cat-id") Integer catId) {
         log.info("Поступил запрос на удаление категории с id: {}", catId);
-        service.removeCategory(catId);
+        service.deleteCategoryById(catId);
     }
 
     @PatchMapping("/admin/categories/{cat-id}")
@@ -52,6 +52,6 @@ public class CategoryController {
     @GetMapping("/categories/{cat-id}")
     public CategoryDto getCategoryById(@PathVariable("cat-id") Integer catId) {
         log.info("Поступил запрос на получение категории с id: {}", catId);
-        return toCategoryDto(service.findById(catId));
+        return service.getCategoryById(catId);
     }
 }

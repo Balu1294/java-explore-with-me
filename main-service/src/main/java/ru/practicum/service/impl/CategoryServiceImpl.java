@@ -7,6 +7,7 @@ import ru.practicum.dto.CategoryDto;
 import ru.practicum.dto.NewCategoryDto;
 import ru.practicum.exception.ClashException;
 import ru.practicum.exception.NotFoundException;
+import ru.practicum.mapper.CategoryMapper;
 import ru.practicum.model.Category;
 import ru.practicum.model.Event;
 import ru.practicum.repository.CategoryRepository;
@@ -26,46 +27,58 @@ public class CategoryServiceImpl implements CategoryService {
     private final EventRepository eventsRepository;
 
     @Override
-    public CategoryDto addCategory(NewCategoryDto newCategoryDto) {
-        Category category = toCategory(newCategoryDto);
-        categoryRepository.save(category);
-        return new CategoryDto(category.getId(), category.getName());
+    public List<CategoryDto> getCategories(Integer from, Integer size) {
+        PageRequest pageRequest = PageRequest.of(from / size, size);
+        return categoryRepository.findAll(pageRequest)
+                .stream().map(CategoryMapper::toCategoryDto).collect(Collectors.toList());
     }
 
     @Override
-    public CategoryDto updateCategory(Integer catId, CategoryDto categoryDto) {
-        Category category = findById(catId);
-        if (categoryDto.getName() != null && !category.getName().equals(categoryDto.getName())) {
-            if (categoryRepository.existsByNameIgnoreCase(categoryDto.getName())) {
-                throw new ClashException(String.format("Kатегория c именем: %s уже существует", categoryDto.getName()));
-            }
-        }
-        categoryRepository.save(category);
-        return toCategoryDto(category);
-
+    public CategoryDto getCategoryById(Integer catId) {
+        Category category = checkCategory(catId);
+        return CategoryMapper.toCategoryDto(category);
     }
 
     @Override
-    public void removeCategory(Integer id) {
-        Category category = findById(id);
+    public CategoryDto addNewCategory(NewCategoryDto newCategoryDto) {
+        Category category = CategoryMapper.toCategory(newCategoryDto);
+        Category saveCategory = categoryRepository.save(category);
+        return CategoryMapper.toCategoryDto(saveCategory);
+    }
+
+    @Override
+    public void deleteCategoryById(Integer catId) {
+        Category category = checkCategory(catId);
         List<Event> events = eventsRepository.findByCategory(category);
         if (!events.isEmpty()) {
             throw new ClashException("Can't delete category due to using for some events");
         }
-        categoryRepository.deleteById(id);
+        categoryRepository.deleteById(catId);
     }
 
     @Override
-    public List<CategoryDto> getCategories(Integer from, Integer size) {
-        PageRequest page = PageRequest.of(from / size, size);
-        return categoryRepository.findAll(page).stream()
-                .map(category -> toCategoryDto(category))
-                .collect(Collectors.toList());
+    public CategoryDto updateCategory(Integer catId, CategoryDto categoryDto) {
+        Category oldCategory = checkCategory(catId);
+        String newName = categoryDto.getName();
+
+        if (newName != null && !oldCategory.getName().equals(newName)) {
+            checkUniqNameCategoryIgnoreCase(newName);
+        }
+
+        oldCategory.setName(newName);
+        Category updatedCategory = categoryRepository.save(oldCategory);
+        return CategoryMapper.toCategoryDto(updatedCategory);
     }
 
-    @Override
-    public Category findById(Integer id) {
-        return categoryRepository.findById(id).orElseThrow(() ->
-                new NotFoundException(String.format("Категории с id: %d не существует", id)));
+
+    private void checkUniqNameCategoryIgnoreCase(String name) {
+        if (categoryRepository.existsByNameIgnoreCase(name)) {
+            throw new ClashException("Категория " + name + " уже существует");
+        }
+    }
+
+    private Category checkCategory(Integer catId) {
+        return categoryRepository.findById(catId).orElseThrow(() ->
+                new NotFoundException("Категории с id = " + catId + " не существует"));
     }
 }

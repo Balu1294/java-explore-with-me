@@ -7,14 +7,14 @@ import ru.practicum.model.Category;
 import java.util.List;
 
 public interface CategoryService {
-    CategoryDto addCategory(NewCategoryDto newCategoryDto);
-
-    CategoryDto updateCategory(Integer catId, CategoryDto categoryDto);
-
-    void removeCategory(Integer id);
-
     List<CategoryDto> getCategories(Integer from, Integer size);
 
-    Category findById(Integer id);
+    CategoryDto getCategoryById(Integer catId);
+
+    CategoryDto addNewCategory(NewCategoryDto newCategoryDto);
+
+    void deleteCategoryById(Integer catId);
+
+    CategoryDto updateCategory(Integer catId, CategoryDto categoryDto);
 
 }

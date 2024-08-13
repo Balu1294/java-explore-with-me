@@ -1,12 +1,13 @@
 package ru.practicum.dto;
 
-import lombok.AccessLevel;
-import lombok.AllArgsConstructor;
-import lombok.Data;
+import lombok.*;
 import lombok.experimental.FieldDefaults;
 
-@Data
+@Getter
+@Setter
+@NoArgsConstructor
 @AllArgsConstructor
+@Builder
 @FieldDefaults(makeFinal = false, level = AccessLevel.PRIVATE)
 public class UserShortDto {
     Integer id;
