@@ -8,7 +8,6 @@ import ru.practicum.enums.RequestStatus;
 import ru.practicum.exception.ClashException;
 import ru.practicum.exception.IncorrectParametersException;
 import ru.practicum.exception.NotFoundException;
-import ru.practicum.mapper.RequestMapper;
 import ru.practicum.model.Event;
 import ru.practicum.model.Request;
 import ru.practicum.model.User;
@@ -32,10 +31,10 @@ public class RequestServiceImpl implements RequestService {
 
     @Override
     public ParticipationRequestDto addNewRequest(Integer userId, Integer eventId) {
-        User user = checkUser(userId);
+        User user = findByIdUser(userId);
 
         Event event = eventRepository.findById(eventId)
-                .orElseThrow(() -> new NotFoundException("Событие с id= " + eventId + " не найдено"));
+                .orElseThrow(() -> new NotFoundException(String.format("Событие с id: %d не найдено", eventId)));
         LocalDateTime createdOn = LocalDateTime.now();
         requestValidate(event, userId, eventId);
         Request request = new Request();
@@ -55,31 +54,32 @@ public class RequestServiceImpl implements RequestService {
             request.setStatus(RequestStatus.CONFIRMED);
         }
 
-        return RequestMapper.toParticipationRequestDto(request);
+        return toParticipationRequestDto(request);
     }
 
     @Override
     public List<ParticipationRequestDto> getRequestsByUserId(Integer userId) {
-        checkUser(userId);
+        findByIdUser(userId);
         List<Request> result = requestRepository.findAllByRequesterId(userId);
-        return result.stream().map(RequestMapper::toParticipationRequestDto).collect(Collectors.toList());
+        return result.stream().map(request -> toParticipationRequestDto(request)).collect(Collectors.toList());
     }
 
     @Override
     public ParticipationRequestDto cancelRequest(Integer userId, Integer requestId) {
-        checkUser(userId);
+        findByIdUser(userId);
         Request request = requestRepository.findByIdAndRequesterId(requestId, userId).orElseThrow(
-                () -> new NotFoundException("Запрос с id= " + requestId + " не найден"));
+                () -> new NotFoundException(String.format("Запрос с id: %d не найден", requestId)));
         if (request.getStatus().equals(RequestStatus.CANCELED) || request.getStatus().equals(RequestStatus.REJECTED)) {
             throw new IncorrectParametersException("Запрос не подтвержден");
         }
         request.setStatus(RequestStatus.CANCELED);
         Request requestAfterSave = requestRepository.save(request);
-        return RequestMapper.toParticipationRequestDto(requestAfterSave);
+        return toParticipationRequestDto(requestAfterSave);
     }
-    private User checkUser(Integer userId) {
+
+    private User findByIdUser(Integer userId) {
         return userRepository.findById(userId).orElseThrow(() ->
-                new NotFoundException("Категории с id = " + userId + " не существует"));
+                new NotFoundException(String.format("Пользователя с id: %d не существует", userId)));
     }
 
     private void requestValidate(Event event, Integer userId, Integer eventId) {
@@ -94,7 +94,7 @@ public class RequestServiceImpl implements RequestService {
             throw new ClashException(String.format("Событие: %s не опубликовано", event.getTitle()));
         }
         if (requestRepository.existsByEventIdAndRequesterId(eventId, userId)) {
-            throw new ClashException(String.format("Событие с id: %d уже существует", eventId));
+            throw new ClashException(String.format("События с id: %d уже существует", eventId));
         }
     }
 }

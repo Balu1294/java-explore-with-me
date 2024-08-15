@@ -2,6 +2,7 @@ package ru.practicum.controller;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.HttpStatus;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 import ru.practicum.dto.ParticipationRequestDto;
@@ -11,7 +12,7 @@ import javax.validation.constraints.Min;
 import java.util.List;
 
 @RestController
-@RequestMapping(path = "users/{user-id}/requests")
+@RequestMapping("users/{user-id}/requests")
 @Slf4j
 @RequiredArgsConstructor
 @Validated
@@ -19,6 +20,7 @@ public class RequestsController {
     private final RequestService requestService;
 
     @PostMapping
+    @ResponseStatus(HttpStatus.CREATED)
     public ParticipationRequestDto addRequest(@PathVariable("user-id") @Min(0) Integer userId,
                                               @RequestParam("eventId") @Min(0) Integer eventId) {
         log.info("Поступил запрос на создание запроса на участие в событии с id= {}  пользователя с id= {}",

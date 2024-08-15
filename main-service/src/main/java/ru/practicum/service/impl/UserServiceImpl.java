@@ -7,7 +7,6 @@ import org.springframework.transaction.annotation.Transactional;
 import ru.practicum.dto.NewUserRequest;
 import ru.practicum.dto.UserDto;
 import ru.practicum.exception.NotFoundException;
-import ru.practicum.mapper.UserMapper;
 import ru.practicum.model.User;
 import ru.practicum.repository.UserRepository;
 import ru.practicum.service.UserService;
@@ -24,27 +23,27 @@ import static ru.practicum.mapper.UserMapper.toUserDto;
 public class UserServiceImpl implements UserService {
     private final UserRepository userRepository;
 
+    @Override
+    public List<UserDto> getListAllUsers(List<Integer> ids, Integer from, Integer size) {
+        PageRequest page = PageRequest.of(from / size, size);
+        return (ids != null) ? userRepository.findByIdIn(ids, page)
+                .stream().map(user -> toUserDto(user)).collect(Collectors.toList()) : userRepository.findAll(page)
+                .stream().map(user -> toUserDto(user)).collect(Collectors.toList());
+    }
+
     @Transactional
     @Override
     public UserDto addNewUser(NewUserRequest newUserRequest) {
-        User user = userRepository.save(UserMapper.toUser(newUserRequest));
-        return UserMapper.toUserDto(user);
+        User user = userRepository.save(toUser(newUserRequest));
+        return toUserDto(user);
     }
 
     @Transactional
     @Override
     public void removeUser(Integer userId) {
         if (!userRepository.existsById(userId)) {
-            throw new NotFoundException("Пользователь с id= " + userId + " не найден");
+            throw new NotFoundException(String.format("Пользователя с id: %d не существует", userId));
         }
         userRepository.deleteById(userId);
-    }
-
-    @Override
-    public List<UserDto> getListUsers(List<Integer> ids, Integer from, Integer size) {
-        PageRequest page = PageRequest.of(from / size, size);
-        return (ids != null) ? userRepository.findByIdIn(ids, page)
-                .stream().map(UserMapper::toUserDto).collect(Collectors.toList()) : userRepository.findAll(page)
-                .stream().map(UserMapper::toUserDto).collect(Collectors.toList());
     }
 }

@@ -2,6 +2,7 @@ package ru.practicum.controller;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.HttpStatus;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 import ru.practicum.dto.CategoryDto;
@@ -13,8 +14,6 @@ import javax.validation.constraints.Positive;
 import javax.validation.constraints.PositiveOrZero;
 import java.util.List;
 
-import static ru.practicum.mapper.CategoryMapper.toCategoryDto;
-
 @Slf4j
 @Validated
 @RestController
@@ -22,25 +21,6 @@ import static ru.practicum.mapper.CategoryMapper.toCategoryDto;
 @RequiredArgsConstructor
 public class CategoryController {
     private final CategoryService service;
-
-    @PostMapping("/admin/categories")
-    public CategoryDto addCategory(@RequestBody @Valid NewCategoryDto newCategoryDto) {
-        log.info("Поступил запрос на создание категории {}", newCategoryDto.getName());
-        return service.addNewCategory(newCategoryDto);
-    }
-
-    @DeleteMapping("/admin/categories/{cat-id}")
-    public void removeCategoryById(@PathVariable("cat-id") Integer catId) {
-        log.info("Поступил запрос на удаление категории с id: {}", catId);
-        service.deleteCategoryById(catId);
-    }
-
-    @PatchMapping("/admin/categories/{cat-id}")
-    public CategoryDto updateCategory(@PathVariable("cat-id") Integer catId,
-                                      @RequestBody @Valid CategoryDto categoryDto) {
-        log.info("Поступил запрос на обновление категории с id: {}", categoryDto.getId());
-        return service.updateCategory(catId, categoryDto);
-    }
 
     @GetMapping("/categories")
     public List<CategoryDto> getCategories(@RequestParam(defaultValue = "0") @PositiveOrZero Integer from,
@@ -53,5 +33,26 @@ public class CategoryController {
     public CategoryDto getCategoryById(@PathVariable("cat-id") Integer catId) {
         log.info("Поступил запрос на получение категории с id: {}", catId);
         return service.getCategoryById(catId);
+    }
+
+    @PostMapping("/admin/categories")
+    @ResponseStatus(HttpStatus.CREATED)
+    public CategoryDto addCategory(@RequestBody @Valid NewCategoryDto newCategoryDto) {
+        log.info("Поступил запрос на создание категории {}", newCategoryDto.getName());
+        return service.addNewCategory(newCategoryDto);
+    }
+
+    @DeleteMapping("/admin/categories/{cat-id}")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    public void removeCategory(@PathVariable("cat-id") Integer catId) {
+        log.info("Поступил запрос на удаление категории с id: {}", catId);
+        service.removeCategory(catId);
+    }
+
+    @PatchMapping("/admin/categories/{cat-id}")
+    public CategoryDto updateCategory(@PathVariable("cat-id") Integer catId,
+                                      @RequestBody @Valid CategoryDto categoryDto) {
+        log.info("Поступил запрос на обновление категории с id: {}", categoryDto.getId());
+        return service.updateCategory(catId, categoryDto);
     }
 }

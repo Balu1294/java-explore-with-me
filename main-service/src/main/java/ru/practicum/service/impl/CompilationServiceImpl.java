@@ -9,7 +9,6 @@ import ru.practicum.dto.NewCompilationDto;
 import ru.practicum.dto.UpdateCompilationRequest;
 import ru.practicum.exception.IncorrectParametersException;
 import ru.practicum.exception.NotFoundException;
-import ru.practicum.mapper.CompilationMapper;
 import ru.practicum.model.Compilation;
 import ru.practicum.model.Event;
 import ru.practicum.repository.CompilationRepository;
@@ -32,7 +31,7 @@ public class CompilationServiceImpl implements CompilationService {
     @Transactional
     @Override
     public CompilationDto addCompilation(NewCompilationDto compilationDto) {
-        Compilation compilation = CompilationMapper.toCompilation(compilationDto);
+        Compilation compilation = toCompilation(compilationDto);
         compilation.setPinned(Optional.ofNullable(compilation.getPinned()).orElse(false));
 
         Set<Integer> compEventIds = (compilationDto.getEvents() != null) ? compilationDto.getEvents() : Collections.emptySet();
@@ -42,13 +41,13 @@ public class CompilationServiceImpl implements CompilationService {
         compilation.setEvents(eventsSet);
 
         Compilation compilationAfterSave = compilationRepository.save(compilation);
-        return CompilationMapper.toCompilationDto(compilationAfterSave);
+        return toCompilationDto(compilationAfterSave);
     }
 
     @Transactional
     @Override
     public CompilationDto updateCompilation(Integer compId, UpdateCompilationRequest update) {
-        Compilation compilation = checkCompilation(compId);
+        Compilation compilation = findById(compId);
 
         Set<Integer> eventIds = update.getEvents();
 
@@ -64,13 +63,13 @@ public class CompilationServiceImpl implements CompilationService {
         }
         compilation.setTitle(Optional.ofNullable(update.getTitle()).orElse(compilation.getTitle()));
 
-        return CompilationMapper.toCompilationDto(compilation);
+        return toCompilationDto(compilation);
     }
 
     @Transactional
     @Override
-    public void deleteCompilation(Integer compId) {
-        checkCompilation(compId);
+    public void removeCompilation(Integer compId) {
+        findById(compId);
         compilationRepository.deleteById(compId);
     }
 
@@ -86,18 +85,18 @@ public class CompilationServiceImpl implements CompilationService {
         }
 
         return compilations.stream()
-                .map(CompilationMapper::toCompilationDto)
+                .map(compilation -> toCompilationDto(compilation))
                 .collect(Collectors.toList());
     }
 
 
     @Override
-    public CompilationDto findByIdCompilation(Integer compId) {
-        return CompilationMapper.toCompilationDto(checkCompilation(compId));
+    public CompilationDto getCompilationById(Integer compId) {
+        return toCompilationDto(findById(compId));
     }
 
-    private Compilation checkCompilation(Integer compId) {
+    private Compilation findById(Integer compId) {
         return compilationRepository.findById(compId).orElseThrow(
-                () -> new NotFoundException("Compilation с id = " + compId + " не найден"));
+                () -> new NotFoundException(String.format("Compilation с id: %d не существует", compId)));
     }
 }

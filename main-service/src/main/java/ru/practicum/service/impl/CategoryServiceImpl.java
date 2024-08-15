@@ -7,7 +7,6 @@ import ru.practicum.dto.CategoryDto;
 import ru.practicum.dto.NewCategoryDto;
 import ru.practicum.exception.ClashException;
 import ru.practicum.exception.NotFoundException;
-import ru.practicum.mapper.CategoryMapper;
 import ru.practicum.model.Category;
 import ru.practicum.model.Event;
 import ru.practicum.repository.CategoryRepository;
@@ -30,55 +29,49 @@ public class CategoryServiceImpl implements CategoryService {
     public List<CategoryDto> getCategories(Integer from, Integer size) {
         PageRequest pageRequest = PageRequest.of(from / size, size);
         return categoryRepository.findAll(pageRequest)
-                .stream().map(CategoryMapper::toCategoryDto).collect(Collectors.toList());
+                .stream().map(category -> toCategoryDto(category)).collect(Collectors.toList());
     }
 
     @Override
     public CategoryDto getCategoryById(Integer catId) {
-        Category category = checkCategory(catId);
-        return CategoryMapper.toCategoryDto(category);
+        Category category = findById(catId);
+        return toCategoryDto(category);
     }
 
     @Override
     public CategoryDto addNewCategory(NewCategoryDto newCategoryDto) {
-        Category category = CategoryMapper.toCategory(newCategoryDto);
+        Category category = toCategory(newCategoryDto);
         Category saveCategory = categoryRepository.save(category);
-        return CategoryMapper.toCategoryDto(saveCategory);
+        return toCategoryDto(saveCategory);
     }
 
     @Override
-    public void deleteCategoryById(Integer catId) {
-        Category category = checkCategory(catId);
+    public void removeCategory(Integer catId) {
+        Category category = findById(catId);
         List<Event> events = eventsRepository.findByCategory(category);
         if (!events.isEmpty()) {
-            throw new ClashException("Can't delete category due to using for some events");
+            throw new ClashException(String.format("Нельзя удалить категорию с id: %d, т.к. она используется в событиях", catId));
         }
         categoryRepository.deleteById(catId);
     }
 
     @Override
     public CategoryDto updateCategory(Integer catId, CategoryDto categoryDto) {
-        Category oldCategory = checkCategory(catId);
+        Category category = findById(catId);
         String newName = categoryDto.getName();
 
-        if (newName != null && !oldCategory.getName().equals(newName)) {
-            checkUniqNameCategoryIgnoreCase(newName);
+        if (newName != null && !category.getName().equals(newName)) {
+            if (categoryRepository.existsByNameIgnoreCase(newName)) {
+                throw new ClashException(String.format("Категория %s уже существует", newName));
+            }
         }
-
-        oldCategory.setName(newName);
-        Category updatedCategory = categoryRepository.save(oldCategory);
-        return CategoryMapper.toCategoryDto(updatedCategory);
+        category.setName(newName);
+        Category updatedCategory = categoryRepository.save(category);
+        return toCategoryDto(updatedCategory);
     }
 
-
-    private void checkUniqNameCategoryIgnoreCase(String name) {
-        if (categoryRepository.existsByNameIgnoreCase(name)) {
-            throw new ClashException("Категория " + name + " уже существует");
-        }
-    }
-
-    private Category checkCategory(Integer catId) {
+    private Category findById(Integer catId) {
         return categoryRepository.findById(catId).orElseThrow(() ->
-                new NotFoundException("Категории с id = " + catId + " не существует"));
+                new NotFoundException(String.format("Категория с id:%d не существует", catId)));
     }
 }

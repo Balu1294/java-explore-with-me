@@ -18,9 +18,6 @@ public class StatsClient extends BaseClient {
     public static final String DATE_FORMAT = "yyyy-MM-dd HH:mm:ss";
     private static final DateTimeFormatter formatter = DateTimeFormatter.ofPattern(DATE_FORMAT);
 
-    @Value("${server.application.name:ewm-main-service}")
-    private String applicationName;
-
     @Autowired
     public StatsClient(@Value("${stat-server.url}") String serverUrl, RestTemplateBuilder builder) {
         super(

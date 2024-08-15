@@ -24,9 +24,6 @@ import ru.practicum.enums.UserStateEvent;
 import ru.practicum.exception.ClashException;
 import ru.practicum.exception.IncorrectParametersException;
 import ru.practicum.exception.NotFoundException;
-import ru.practicum.mapper.EventMapper;
-import ru.practicum.mapper.LocationMapper;
-import ru.practicum.mapper.RequestMapper;
 import ru.practicum.model.*;
 import ru.practicum.repository.*;
 import ru.practicum.service.EventService;
@@ -35,6 +32,10 @@ import javax.servlet.http.HttpServletRequest;
 import java.time.LocalDateTime;
 import java.util.*;
 import java.util.stream.Collectors;
+
+import static ru.practicum.mapper.EventMapper.*;
+import static ru.practicum.mapper.LocationMapper.toLocation;
+import static ru.practicum.mapper.RequestMapper.toParticipationRequestDto;
 
 @Service
 @RequiredArgsConstructor
@@ -51,8 +52,9 @@ public class EventServiceImpl implements EventService {
     private String applicationName;
 
     @Override
-    public List<EventFullDto> getAllEventFromAdmin(SearchEventParamsAdmin searchEventParamsAdmin) {
-        PageRequest pageable = PageRequest.of(searchEventParamsAdmin.getFrom() / searchEventParamsAdmin.getSize(), searchEventParamsAdmin.getSize());
+    public List<EventFullDto> getListEventFromAdmin(SearchEventParamsAdmin searchEventParamsAdmin) {
+        PageRequest pageable = PageRequest.of(searchEventParamsAdmin.getFrom() / searchEventParamsAdmin.getSize(),
+                searchEventParamsAdmin.getSize());
         Specification<Event> specification = Specification.where(null);
 
         List<Integer> users = searchEventParamsAdmin.getUsers();
@@ -62,23 +64,29 @@ public class EventServiceImpl implements EventService {
         LocalDateTime rangeStart = searchEventParamsAdmin.getRangeStart();
 
         if (users != null && !users.isEmpty()) {
-            specification = specification.and((root, query, criteriaBuilder) -> root.get("initiator").get("id").in(users));
+            specification = specification.and((root, query, criteriaBuilder) ->
+                    root.get("initiator").get("id").in(users));
         }
         if (states != null && !states.isEmpty()) {
-            specification = specification.and((root, query, criteriaBuilder) -> root.get("eventStatus").as(String.class).in(states));
+            specification = specification.and((root, query, criteriaBuilder) ->
+                    root.get("eventStatus").as(String.class).in(states));
         }
         if (categories != null && !categories.isEmpty()) {
-            specification = specification.and((root, query, criteriaBuilder) -> root.get("category").get("id").in(categories));
+            specification = specification.and((root, query, criteriaBuilder) ->
+                    root.get("category").get("id").in(categories));
         }
         if (rangeEnd != null) {
-            specification = specification.and((root, query, criteriaBuilder) -> criteriaBuilder.lessThanOrEqualTo(root.get("eventDate"), rangeEnd));
+            specification = specification.and((root, query, criteriaBuilder) ->
+                    criteriaBuilder.lessThanOrEqualTo(root.get("eventDate"), rangeEnd));
         }
         if (rangeStart != null) {
-            specification = specification.and((root, query, criteriaBuilder) -> criteriaBuilder.greaterThanOrEqualTo(root.get("eventDate"), rangeStart));
+            specification = specification.and((root, query, criteriaBuilder) ->
+                    criteriaBuilder.greaterThanOrEqualTo(root.get("eventDate"), rangeStart));
         }
         Page<Event> events = eventRepository.findAll(specification, pageable);
 
-        List<EventFullDto> result = events.getContent().stream().map(EventMapper::toEventFullDto).collect(Collectors.toList());
+        List<EventFullDto> result = events.getContent().stream().map(event ->
+                toEventFullDto(event)).collect(Collectors.toList());
 
         Map<Integer, List<Request>> confirmedRequestsCountMap = getConfirmedRequestsCount(events.toList());
         for (EventFullDto event : result) {
@@ -91,7 +99,7 @@ public class EventServiceImpl implements EventService {
 
     @Override
     public EventFullDto updateEventFromAdmin(Integer eventId, UpdateEventAdminRequest updateEvent) {
-        Event oldEvent = checkEvent(eventId);
+        Event oldEvent = findEventId(eventId);
         if (oldEvent.getEventStatus().equals(EventStatus.PUBLISHED) || oldEvent.getEventStatus().equals(EventStatus.CANCELED)) {
             throw new ClashException("Можно изменить только неподтвержденное событие");
         }
@@ -105,7 +113,8 @@ public class EventServiceImpl implements EventService {
         LocalDateTime gotEventDate = updateEvent.getEventDate();
         if (gotEventDate != null) {
             if (gotEventDate.isBefore(LocalDateTime.now().plusHours(1))) {
-                throw new IncorrectParametersException("Некорректные параметры даты.Дата начала " + "изменяемого события должна " + "быть не ранее чем за час от даты публикации.");
+                throw new IncorrectParametersException("Некорректные параметры даты.Дата начала "
+                        + "изменяемого события должна " + "быть не ранее чем за час от даты публикации.");
             }
             eventForUpdate.setEventDate(updateEvent.getEventDate());
             hasChanges = true;
@@ -125,18 +134,18 @@ public class EventServiceImpl implements EventService {
         if (hasChanges) {
             eventAfterUpdate = eventRepository.save(eventForUpdate);
         }
-        return eventAfterUpdate != null ? EventMapper.toEventFullDto(eventAfterUpdate) : null;
+        return eventAfterUpdate != null ? toEventFullDto(eventAfterUpdate) : null;
     }
 
     @Override
     public EventFullDto updateEventByUserIdAndEventId(Integer userId, Integer eventId, UpdateEventUserRequest inputUpdate) {
-        checkUser(userId);
-        Event oldEvent = checkEvenByInitiatorAndEventId(userId, eventId);
+        findUserId(userId);
+        Event oldEvent = findEvenByInitiatorAndEventId(userId, eventId);
         if (oldEvent.getEventStatus().equals(EventStatus.PUBLISHED)) {
             throw new ClashException("Статус события не может быть обновлен, так как со статусом PUBLISHED");
         }
         if (!oldEvent.getInitiator().getId().equals(userId)) {
-            throw new ClashException("Пользователь с id= " + userId + " не автор события");
+            throw new ClashException(String.format("Пользователь с id: %d не автор события", userId));
         }
         Event eventForUpdate = universalUpdate(oldEvent, inputUpdate);
         boolean hasChanges = false;
@@ -169,43 +178,43 @@ public class EventServiceImpl implements EventService {
             eventAfterUpdate = eventRepository.save(eventForUpdate);
         }
 
-        return eventAfterUpdate != null ? EventMapper.toEventFullDto(eventAfterUpdate) : null;
+        return eventAfterUpdate != null ? toEventFullDto(eventAfterUpdate) : null;
     }
 
     @Override
     public List<EventShortDto> getEventsByUserId(Integer userId, Integer from, Integer size) {
         if (!userRepository.existsById(userId)) {
-            throw new NotFoundException("Пользователь с id= " + userId + " не найден");
+            throw new NotFoundException(String.format("Пользователь с id:%d не найден", userId));
         }
         PageRequest pageRequest = PageRequest.of(from / size, size, org.springframework.data.domain.Sort.by(Sort.Direction.ASC, "id"));
-        return eventRepository.findAll(pageRequest).getContent().stream().map(EventMapper::toEventShortDto).collect(Collectors.toList());
+        return eventRepository.findAll(pageRequest).getContent().stream().map(event -> toEventShortDto(event)).collect(Collectors.toList());
     }
 
     @Override
     public EventFullDto getEventByUserIdAndEventId(Integer userId, Integer eventId) {
-        checkUser(userId);
-        Event event = checkEvenByInitiatorAndEventId(userId, eventId);
-        return EventMapper.toEventFullDto(event);
+        findUserId(userId);
+        Event event = findEvenByInitiatorAndEventId(userId, eventId);
+        return toEventFullDto(event);
     }
 
     @Override
     public EventFullDto addNewEvent(Integer userId, NewEventDto eventDto) {
         LocalDateTime createdOn = LocalDateTime.now();
-        User user = checkUser(userId);
+        User user = findUserId(userId);
         checkDateAndTime(LocalDateTime.now(), eventDto.getEventDate());
-        Category category = checkCategory(eventDto.getCategory());
-        Event event = EventMapper.toEvent(eventDto);
+        Category category = findCategoryById(eventDto.getCategory());
+        Event event = toEvent(eventDto);
         event.setCategory(category);
         event.setInitiator(user);
         event.setEventStatus(EventStatus.PENDING);
         event.setCreatedDate(createdOn);
         if (eventDto.getLocation() != null) {
-            Location location = locationRepository.save(LocationMapper.toLocation(eventDto.getLocation()));
+            Location location = locationRepository.save(toLocation(eventDto.getLocation()));
             event.setLocation(location);
         }
         Event eventSaved = eventRepository.save(event);
 
-        EventFullDto eventFullDto = EventMapper.toEventFullDto(eventSaved);
+        EventFullDto eventFullDto = toEventFullDto(eventSaved);
         eventFullDto.setViews(0);
         eventFullDto.setConfirmedRequests(0);
         return eventFullDto;
@@ -214,19 +223,20 @@ public class EventServiceImpl implements EventService {
 
     @Override
     public List<ParticipationRequestDto> getAllParticipationRequestsFromEventByOwner(Integer userId, Integer eventId) {
-        checkUser(userId);
-        checkEvenByInitiatorAndEventId(userId, eventId);
+        findUserId(userId);
+        findEvenByInitiatorAndEventId(userId, eventId);
         List<Request> requests = requestRepository.findAllByEventId(eventId);
-        return requests.stream().map(RequestMapper::toParticipationRequestDto).collect(Collectors.toList());
+        return requests.stream().map(request -> toParticipationRequestDto(request)).collect(Collectors.toList());
     }
 
     @Override
-    public EventRequestStatusUpdateResult updateStatusRequest(Integer userId, Integer eventId, EventRequestStatusUpdateRequest inputUpdate) {
-        checkUser(userId);
-        Event event = checkEvenByInitiatorAndEventId(userId, eventId);
+    public EventRequestStatusUpdateResult updateStatusRequest(Integer userId, Integer eventId,
+                                                              EventRequestStatusUpdateRequest inputUpdate) {
+        findUserId(userId);
+        Event event = findEvenByInitiatorAndEventId(userId, eventId);
 
         if (!event.isRequestModeration() || event.getParticipantLimit() == 0) {
-            throw new ClashException("Это событие не требует подтверждения запросов");
+            throw new ClashException(String.format("Событие с id: %d не требует подтверждения запросов", eventId));
         }
         RequestStatus status = inputUpdate.getStatus();
 
@@ -236,7 +246,8 @@ public class EventServiceImpl implements EventService {
                 if (event.getParticipantLimit() == confirmedRequestsCount) {
                     throw new ClashException("Лимит участников исчерпан");
                 }
-                CaseUpdatedStatusDto updatedStatusConfirmed = updatedStatusConfirmed(event, CaseUpdatedStatusDto.builder().idsFromUpdateStatus(new ArrayList<>(inputUpdate.getRequestIds())).build(), RequestStatus.CONFIRMED, confirmedRequestsCount);
+                CaseUpdatedStatusDto updatedStatusConfirmed = updatedStatusConfirmed(event, CaseUpdatedStatusDto.builder()
+                        .idsFromUpdateStatus(new ArrayList<>(inputUpdate.getRequestIds())).build(), RequestStatus.CONFIRMED, confirmedRequestsCount);
 
                 List<Request> confirmedRequests = requestRepository.findAllById(updatedStatusConfirmed.getProcessedIds());
                 List<Request> rejectedRequests = new ArrayList<>();
@@ -245,18 +256,24 @@ public class EventServiceImpl implements EventService {
                     rejectedRequests = rejectRequest(ids, eventId);
                 }
 
-                return EventRequestStatusUpdateResult.builder().confirmedRequests(confirmedRequests.stream().map(RequestMapper::toParticipationRequestDto).collect(Collectors.toList())).rejectedRequests(rejectedRequests.stream().map(RequestMapper::toParticipationRequestDto).collect(Collectors.toList())).build();
+                return EventRequestStatusUpdateResult.builder().confirmedRequests(confirmedRequests.stream()
+                                .map(request -> toParticipationRequestDto(request)).collect(Collectors.toList()))
+                        .rejectedRequests(rejectedRequests.stream().map(request -> toParticipationRequestDto(request))
+                                .collect(Collectors.toList())).build();
             case REJECTED:
                 if (event.getParticipantLimit() == confirmedRequestsCount) {
                     throw new ClashException("Лимит участников исчерпан");
                 }
 
-                final CaseUpdatedStatusDto updatedStatusReject = updatedStatusConfirmed(event, CaseUpdatedStatusDto.builder().idsFromUpdateStatus(new ArrayList<>(inputUpdate.getRequestIds())).build(), RequestStatus.REJECTED, confirmedRequestsCount);
+                final CaseUpdatedStatusDto updatedStatusReject = updatedStatusConfirmed(event,
+                        CaseUpdatedStatusDto.builder().idsFromUpdateStatus(new ArrayList<>(inputUpdate.getRequestIds()))
+                                .build(), RequestStatus.REJECTED, confirmedRequestsCount);
                 List<Request> rejectRequest = requestRepository.findAllById(updatedStatusReject.getProcessedIds());
 
-                return EventRequestStatusUpdateResult.builder().rejectedRequests(rejectRequest.stream().map(RequestMapper::toParticipationRequestDto).collect(Collectors.toList())).build();
+                return EventRequestStatusUpdateResult.builder().rejectedRequests(rejectRequest.stream()
+                        .map(request -> toParticipationRequestDto(request)).collect(Collectors.toList())).build();
             default:
-                throw new IncorrectParametersException("Некорректный статус - " + status);
+                throw new IncorrectParametersException(String.format("Некорректный статус: %s", status));
         }
     }
 
@@ -299,7 +316,7 @@ public class EventServiceImpl implements EventService {
         specification = specification.and((root, query, criteriaBuilder) -> criteriaBuilder.equal(root.get("eventStatus"), EventStatus.PUBLISHED));
 
         List<Event> resultEvents = eventRepository.findAll(specification, pageable).getContent();
-        List<EventShortDto> result = resultEvents.stream().map(EventMapper::toEventShortDto).collect(Collectors.toList());
+        List<EventShortDto> result = resultEvents.stream().map(event -> toEventShortDto(event)).collect(Collectors.toList());
         Map<Integer, Integer> viewStatsMap = getViewsAllEvents(resultEvents);
 
         for (EventShortDto event : result) {
@@ -312,36 +329,41 @@ public class EventServiceImpl implements EventService {
 
     @Override
     public EventFullDto getEventById(Integer eventId, HttpServletRequest request) {
-        Event event = checkEvent(eventId);
+        Event event = findEventId(eventId);
         if (!event.getEventStatus().equals(EventStatus.PUBLISHED)) {
-            throw new NotFoundException("Событие с id = " + eventId + " не опубликовано");
+            throw new NotFoundException(String.format("Событие с id: %d не опубликовано", eventId));
         }
         addStatsClient(request);
-        EventFullDto eventFullDto = EventMapper.toEventFullDto(event);
+        EventFullDto eventFullDto = toEventFullDto(event);
         Map<Integer, Integer> viewStatsMap = getViewsAllEvents(List.of(event));
         Integer views = viewStatsMap.getOrDefault(event.getId(), 0);
         eventFullDto.setViews(views);
         return eventFullDto;
     }
 
-    private Event checkEvent(Integer eventId) {
-        return eventRepository.findById(eventId).orElseThrow(() -> new NotFoundException("События с id = " + eventId + " не существует"));
+    private Event findEventId(Integer eventId) {
+        return eventRepository.findById(eventId).orElseThrow(() ->
+                new NotFoundException(String.format("События с id: %d не существует", eventId)));
     }
 
-    private User checkUser(Integer userId) {
-        return userRepository.findById(userId).orElseThrow(() -> new NotFoundException("Пользователя с id = " + userId + " не существует"));
+    private User findUserId(Integer userId) {
+        return userRepository.findById(userId).orElseThrow(() ->
+                new NotFoundException(String.format("Пользователя с id: %d не существует", userId)));
     }
 
-    private List<Request> checkRequestOrEventList(Integer eventId, List<Integer> requestId) {
-        return requestRepository.findByEventIdAndIdIn(eventId, requestId).orElseThrow(() -> new NotFoundException("Запроса с id = " + requestId + " или события с id = " + eventId + "не существуют"));
+    private List<Request> findEventAndRequestById(Integer eventId, List<Integer> requestId) {
+        return requestRepository.findByEventIdAndIdIn(eventId, requestId).orElseThrow(() ->
+                new NotFoundException(String.format("Запрос с id: %d или события с id: %d не существуeт", requestId, eventId)));
     }
 
-    private Category checkCategory(Integer catId) {
-        return categoryRepository.findById(catId).orElseThrow(() -> new NotFoundException("Категории с id = " + catId + " не существует"));
+    private Category findCategoryById(Integer catId) {
+        return categoryRepository.findById(catId).orElseThrow(() ->
+                new NotFoundException(String.format("Категории с id: %d не существует", catId)));
     }
 
-    private Event checkEvenByInitiatorAndEventId(Integer userId, Integer eventId) {
-        return eventRepository.findByInitiatorIdAndId(userId, eventId).orElseThrow(() -> new NotFoundException("События с id = " + eventId + "и с пользователем с id = " + userId + " не существует"));
+    private Event findEvenByInitiatorAndEventId(Integer userId, Integer eventId) {
+        return eventRepository.findByInitiatorIdAndId(userId, eventId).orElseThrow(() ->
+                new NotFoundException(String.format("События с id: %d и с пользователем с id: %d не существует", eventId, userId)));
     }
 
     private void checkDateAndTime(LocalDateTime time, LocalDateTime dateTime) {
@@ -363,16 +385,20 @@ public class EventServiceImpl implements EventService {
             List<ViewStats> viewStatsList = objectMapper.convertValue(response.getBody(), new TypeReference<>() {
             });
 
-            viewStatsMap = viewStatsList.stream().filter(statsDto -> statsDto.getUri().startsWith("/events/")).collect(Collectors.toMap(statsDto -> Integer.parseInt(statsDto.getUri().substring("/events/".length())), ViewStats::getHits));
+            viewStatsMap = viewStatsList.stream()
+                    .filter(statsDto -> statsDto.getUri().startsWith("/events/"))
+                    .collect(Collectors.toMap(statsDto -> Integer.parseInt(statsDto.getUri()
+                            .substring("/events/".length())), ViewStats::getHits));
         }
         return viewStatsMap;
     }
 
-    private CaseUpdatedStatusDto updatedStatusConfirmed(Event event, CaseUpdatedStatusDto caseUpdatedStatus, RequestStatus status, int confirmedRequestsCount) {
+    private CaseUpdatedStatusDto updatedStatusConfirmed(Event event, CaseUpdatedStatusDto caseUpdatedStatus,
+                                                        RequestStatus status, int confirmedRequestsCount) {
         int freeRequest = event.getParticipantLimit() - confirmedRequestsCount;
         List<Integer> ids = caseUpdatedStatus.getIdsFromUpdateStatus();
         List<Integer> processedIds = new ArrayList<>();
-        List<Request> requestListLoaded = checkRequestOrEventList(event.getId(), ids);
+        List<Request> requestListLoaded = findEventAndRequestById(event.getId(), ids);
         List<Request> requestList = new ArrayList<>();
 
         for (Request request : requestListLoaded) {
@@ -395,7 +421,7 @@ public class EventServiceImpl implements EventService {
     private List<Request> rejectRequest(List<Integer> ids, Integer eventId) {
         List<Request> rejectedRequests = new ArrayList<>();
         List<Request> requestList = new ArrayList<>();
-        List<Request> requestListLoaded = checkRequestOrEventList(eventId, ids);
+        List<Request> requestListLoaded = findEventAndRequestById(eventId, ids);
 
         for (Request request : requestListLoaded) {
             if (!request.getStatus().equals(RequestStatus.PENDING)) {
@@ -410,11 +436,13 @@ public class EventServiceImpl implements EventService {
     }
 
     private void addStatsClient(HttpServletRequest request) {
-        statsClient.saveHit(EndpointHit.builder().app(applicationName).uri(request.getRequestURI()).ip(request.getRemoteAddr()).timestamp(LocalDateTime.now()).build());
+        statsClient.saveHit(EndpointHit.builder().app(applicationName)
+                .uri(request.getRequestURI()).ip(request.getRemoteAddr()).timestamp(LocalDateTime.now()).build());
     }
 
     private Map<Integer, List<Request>> getConfirmedRequestsCount(List<Event> events) {
-        List<Request> requests = requestRepository.findAllByEventIdInAndStatus(events.stream().map(Event::getId).collect(Collectors.toList()), RequestStatus.CONFIRMED);
+        List<Request> requests = requestRepository.findAllByEventIdInAndStatus(events.stream().map(Event::getId)
+                .collect(Collectors.toList()), RequestStatus.CONFIRMED);
         return requests.stream().collect(Collectors.groupingBy(r -> r.getEvent().getId()));
     }
 
@@ -427,7 +455,7 @@ public class EventServiceImpl implements EventService {
         }
         Integer gotCategory = updateEvent.getCategory();
         if (gotCategory != null) {
-            Category category = checkCategory(gotCategory);
+            Category category = findCategoryById(gotCategory);
             oldEvent.setCategory(category);
             hasChanges = true;
         }
@@ -437,7 +465,7 @@ public class EventServiceImpl implements EventService {
             hasChanges = true;
         }
         if (updateEvent.getLocation() != null) {
-            Location location = LocationMapper.toLocation(updateEvent.getLocation());
+            Location location = toLocation(updateEvent.getLocation());
             oldEvent.setLocation(location);
             hasChanges = true;
         }

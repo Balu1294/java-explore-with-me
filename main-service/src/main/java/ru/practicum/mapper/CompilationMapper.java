@@ -6,6 +6,9 @@ import ru.practicum.dto.NewCompilationDto;
 import ru.practicum.model.Compilation;
 
 import java.util.stream.Collectors;
+
+import static ru.practicum.mapper.EventMapper.toEventShortDto;
+
 @UtilityClass
 public class CompilationMapper {
     public static Compilation toCompilation(NewCompilationDto newCompilationDto) {
@@ -19,7 +22,7 @@ public class CompilationMapper {
         return CompilationDto.builder()
                 .id(compilation.getId())
                 .events(compilation.getEvents().stream()
-                        .map(EventMapper::toEventShortDto)
+                        .map(event -> toEventShortDto(event))
                         .collect(Collectors.toSet()))
                 .pinned(compilation.getPinned())
                 .title(compilation.getTitle())

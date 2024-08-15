@@ -4,6 +4,7 @@ import lombok.experimental.UtilityClass;
 import ru.practicum.dto.CategoryDto;
 import ru.practicum.dto.NewCategoryDto;
 import ru.practicum.model.Category;
+
 @UtilityClass
 public class CategoryMapper {
     public static Category toCategory(NewCategoryDto newCategoryDto) {

@@ -7,7 +7,7 @@ import javax.servlet.http.HttpServletRequest;
 import java.util.List;
 
 public interface EventService {
-    List<EventFullDto> getAllEventFromAdmin(SearchEventParamsAdmin searchEventParamsAdmin);
+    List<EventFullDto> getListEventFromAdmin(SearchEventParamsAdmin searchEventParamsAdmin);
 
     EventFullDto updateEventFromAdmin(Integer eventId, UpdateEventAdminRequest inputUpdate);
 

@@ -1,7 +1,6 @@
 package ru.practicum.service;
 
-import lombok.AllArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import ru.practicum.EndpointHit;
 import ru.practicum.ViewStats;
@@ -12,10 +11,9 @@ import java.util.Collections;
 import java.util.List;
 
 @Service
-@Slf4j
-@AllArgsConstructor
+@RequiredArgsConstructor
 public class StatsServiceImpl implements StatsService {
-    private StatsRepository statsRepository;
+    private final StatsRepository statsRepository;
 
     @Override
     public void saveHit(EndpointHit endpointHit) {
