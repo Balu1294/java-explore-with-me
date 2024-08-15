@@ -7,6 +7,7 @@ import ru.practicum.ViewStats;
 import ru.practicum.ViewStatsRequest;
 import ru.practicum.repository.StatsRepository;
 
+import java.security.InvalidParameterException;
 import java.util.Collections;
 import java.util.List;
 
@@ -22,6 +23,9 @@ public class StatsServiceImpl implements StatsService {
 
     @Override
     public List<ViewStats> getViewStats(ViewStatsRequest request) {
+        if (request.getEnd().isBefore(request.getStart())) {
+            throw new InvalidParameterException(String.format("Некорректный формат start= %s и end= %s", request.getStart(),request.getEnd()));
+        }
         if (request.getUris() == null) {
             request.setUris(Collections.emptyList());
         }
