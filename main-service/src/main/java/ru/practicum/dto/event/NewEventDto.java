@@ -6,11 +6,11 @@ import lombok.experimental.FieldDefaults;
 import org.hibernate.validator.constraints.Length;
 import ru.practicum.dto.LocationDto;
 
-import javax.validation.Valid;
-import javax.validation.constraints.NotBlank;
-import javax.validation.constraints.NotNull;
-import javax.validation.constraints.Positive;
-import javax.validation.constraints.PositiveOrZero;
+import jakarta.validation.Valid;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Positive;
+import jakarta.validation.constraints.PositiveOrZero;
 import java.time.LocalDateTime;
 
 @Getter
@@ -37,6 +37,7 @@ public class NewEventDto {
     boolean paid;
     @PositiveOrZero
     int participantLimit;
+    @Builder.Default
     boolean requestModeration = true;
     @NotNull
     @Length(min = 3, max = 120)

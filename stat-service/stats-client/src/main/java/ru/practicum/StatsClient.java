@@ -23,7 +23,7 @@ public class StatsClient extends BaseClient {
         super(
                 builder
                         .uriTemplateHandler(new DefaultUriBuilderFactory(serverUrl))
-                        .requestFactory(HttpComponentsClientHttpRequestFactory::new)
+                        .requestFactory(HttpComponentsClientHttpRequestFactory.class)
                         .build()
         );
     }
@@ -33,7 +33,6 @@ public class StatsClient extends BaseClient {
     }
 
     public ResponseEntity<Object> getHit(LocalDateTime start, LocalDateTime end, List<String> uris, Boolean unique) {
-        StringBuilder uriBuilder = new StringBuilder("/stats?start={start}&end={end}");
         Map<String, Object> parameters = Map.of(
                 "start", start.format(formatter),
                 "end", end.format(formatter),

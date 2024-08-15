@@ -3,7 +3,7 @@ package ru.practicum.dto;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
 
-import javax.validation.constraints.Size;
+import jakarta.validation.constraints.Size;
 import java.util.Set;
 
 @Getter
