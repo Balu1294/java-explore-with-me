@@ -4,7 +4,7 @@ import lombok.*;
 import lombok.experimental.FieldDefaults;
 import ru.practicum.enums.EventStatus;
 
-import javax.persistence.*;
+import jakarta.persistence.*;
 import java.time.LocalDateTime;
 
 @Entity(name = "events")

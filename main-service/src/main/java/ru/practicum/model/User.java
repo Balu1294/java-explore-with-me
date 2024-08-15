@@ -3,7 +3,7 @@ package ru.practicum.model;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
 
-import javax.persistence.*;
+import jakarta.persistence.*;
 
 @Entity(name = "users")
 @Data

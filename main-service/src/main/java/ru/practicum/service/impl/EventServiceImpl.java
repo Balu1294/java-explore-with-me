@@ -28,7 +28,7 @@ import ru.practicum.model.*;
 import ru.practicum.repository.*;
 import ru.practicum.service.EventService;
 
-import javax.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletRequest;
 import java.time.LocalDateTime;
 import java.util.*;
 import java.util.stream.Collectors;
