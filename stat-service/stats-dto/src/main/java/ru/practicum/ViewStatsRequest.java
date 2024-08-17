@@ -17,6 +17,6 @@ public class ViewStatsRequest {
     @Builder.Default
     LocalDateTime end = LocalDateTime.now();
     List<String> uris;
-    Boolean unique;
+    boolean unique;
     String app;
 }

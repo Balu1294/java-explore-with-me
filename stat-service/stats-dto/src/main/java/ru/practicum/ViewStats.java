@@ -8,6 +8,7 @@ import lombok.experimental.FieldDefaults;
 @Builder
 @AllArgsConstructor
 @NoArgsConstructor
+@ToString
 public class ViewStats {
     String app;  // Название сервиса
     String uri;  // URI сервиса
