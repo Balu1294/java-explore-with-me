@@ -24,7 +24,7 @@ public class RequestsController {
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
     public ParticipationRequestDto addRequest(@PathVariable(USER_ID) @Min(0) Integer userId,
-                                              @RequestParam(EVENT_ID) @Min(0) Integer eventId) {
+                                              @RequestParam("eventId") @Min(0) Integer eventId) {
         log.info("Поступил запрос на создание запроса на участие в событии с id= {}  пользователя с id= {}",
                 eventId, userId);
         return requestService.addNewRequest(userId, eventId);

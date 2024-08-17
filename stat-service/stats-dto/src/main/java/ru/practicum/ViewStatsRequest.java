@@ -7,7 +7,8 @@ import java.time.LocalDateTime;
 import java.util.List;
 
 @Builder
-@Data
+@Getter
+@Setter
 @FieldDefaults(makeFinal = false, level = AccessLevel.PRIVATE)
 @ToString
 public class ViewStatsRequest {

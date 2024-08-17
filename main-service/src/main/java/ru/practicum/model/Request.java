@@ -6,7 +6,8 @@ import ru.practicum.enums.RequestStatus;
 import jakarta.persistence.*;
 import java.time.LocalDateTime;
 
-@Data
+@Getter
+@Setter
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder

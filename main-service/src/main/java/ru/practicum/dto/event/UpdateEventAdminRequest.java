@@ -3,7 +3,8 @@ package ru.practicum.dto.event;
 import lombok.*;
 import ru.practicum.enums.AdminStateEvent;
 
-@Data
+@Getter
+@Setter
 @AllArgsConstructor
 @NoArgsConstructor
 public class UpdateEventAdminRequest extends UpdateEventRequest {
