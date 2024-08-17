@@ -15,6 +15,9 @@ import jakarta.validation.constraints.Positive;
 import jakarta.validation.constraints.PositiveOrZero;
 import java.util.List;
 
+import static ru.practicum.constant.PathConstant.ADMIN_COMPILATIONS_PATH;
+import static ru.practicum.constant.PathConstant.COM_ID;
+
 @RestController
 @RequestMapping
 @Slf4j
@@ -33,7 +36,7 @@ public class CompilationsController {
     }
 
     @GetMapping("/compilations/{com-id}")
-    public CompilationDto getCompilationById(@PathVariable("com-id") Integer comId) {
+    public CompilationDto getCompilationById(@PathVariable(COM_ID) Integer comId) {
         log.info("Поступил запрос на получение compilation c id: {}", comId);
         return service.getCompilationById(comId);
     }
@@ -45,16 +48,16 @@ public class CompilationsController {
         return service.addCompilation(newCompilationDto);
     }
 
-    @PatchMapping("/admin/compilations/{com-id}")
+    @PatchMapping(ADMIN_COMPILATIONS_PATH)
     public CompilationDto updateCompilation(@RequestBody @Valid UpdateCompilationRequest compilation,
-                                            @PathVariable("com-id") Integer compId) {
+                                            @PathVariable(COM_ID) Integer compId) {
         log.info("Поступил запрос на обновление compilation c id: {}", compId);
         return service.updateCompilation(compId, compilation);
     }
 
-    @DeleteMapping("/admin/compilations/{com-id}")
+    @DeleteMapping(ADMIN_COMPILATIONS_PATH)
     @ResponseStatus(HttpStatus.NO_CONTENT)
-    public void removeCompilation(@PathVariable("com-id") Integer comId) {
+    public void removeCompilation(@PathVariable(COM_ID) Integer comId) {
         log.info("Поступил запрос на удаление compilation c id: {}", comId);
         service.removeCompilation(comId);
     }

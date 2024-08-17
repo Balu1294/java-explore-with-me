@@ -14,6 +14,9 @@ import jakarta.validation.constraints.Positive;
 import jakarta.validation.constraints.PositiveOrZero;
 import java.util.List;
 
+import static ru.practicum.constant.PathConstant.ADMIN_CATEGORIES_PATH;
+import static ru.practicum.constant.PathConstant.CAT_ID;
+
 @Slf4j
 @Validated
 @RestController
@@ -30,7 +33,7 @@ public class CategoryController {
     }
 
     @GetMapping("/categories/{cat-id}")
-    public CategoryDto getCategoryById(@PathVariable("cat-id") Integer catId) {
+    public CategoryDto getCategoryById(@PathVariable(CAT_ID) Integer catId) {
         log.info("Поступил запрос на получение категории с id: {}", catId);
         return service.getCategoryById(catId);
     }
@@ -42,15 +45,15 @@ public class CategoryController {
         return service.addNewCategory(newCategoryDto);
     }
 
-    @DeleteMapping("/admin/categories/{cat-id}")
+    @DeleteMapping(ADMIN_CATEGORIES_PATH)
     @ResponseStatus(HttpStatus.NO_CONTENT)
-    public void removeCategory(@PathVariable("cat-id") Integer catId) {
+    public void removeCategory(@PathVariable(CAT_ID) Integer catId) {
         log.info("Поступил запрос на удаление категории с id: {}", catId);
         service.removeCategory(catId);
     }
 
-    @PatchMapping("/admin/categories/{cat-id}")
-    public CategoryDto updateCategory(@PathVariable("cat-id") Integer catId,
+    @PatchMapping(ADMIN_CATEGORIES_PATH)
+    public CategoryDto updateCategory(@PathVariable(CAT_ID) Integer catId,
                                       @RequestBody @Valid CategoryDto categoryDto) {
         log.info("Поступил запрос на обновление категории с id: {}", categoryDto.getId());
         return service.updateCategory(catId, categoryDto);

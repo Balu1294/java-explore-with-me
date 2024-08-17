@@ -14,10 +14,13 @@ import jakarta.validation.constraints.Positive;
 import jakarta.validation.constraints.PositiveOrZero;
 import java.util.List;
 
+import static ru.practicum.constant.PathConstant.ADMIN_USERS_PATH;
+import static ru.practicum.constant.PathConstant.USER_ID;
+
 @Slf4j
 @Validated
 @RestController
-@RequestMapping("/admin/users")
+@RequestMapping(ADMIN_USERS_PATH)
 @RequiredArgsConstructor
 public class UserController {
     private final UserService userService;
@@ -31,7 +34,7 @@ public class UserController {
 
     @DeleteMapping("/{user-id}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
-    public void removeUser(@PathVariable("user-id") Integer userId) {
+    public void removeUser(@PathVariable(USER_ID) Integer userId) {
         log.info("Поступил запрос на удаление пользователя с id: {}", userId);
         userService.removeUser(userId);
     }

@@ -1,13 +1,11 @@
 package ru.practicum.dto.event;
 
 import lombok.AllArgsConstructor;
-import lombok.Getter;
+import lombok.Data;
 import lombok.NoArgsConstructor;
-import lombok.Setter;
 import ru.practicum.enums.UserStateEvent;
 
-@Getter
-@Setter
+@Data
 @AllArgsConstructor
 @NoArgsConstructor
 public class UpdateEventUserRequest extends UpdateEventRequest {

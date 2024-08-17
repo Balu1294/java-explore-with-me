@@ -5,8 +5,7 @@ import lombok.experimental.FieldDefaults;
 
 import jakarta.persistence.*;
 
-@Getter
-@Setter
+@Data
 @Entity(name = "location")
 @AllArgsConstructor
 @NoArgsConstructor

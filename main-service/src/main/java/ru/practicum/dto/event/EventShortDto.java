@@ -8,8 +8,7 @@ import ru.practicum.dto.UserShortDto;
 
 import java.time.LocalDateTime;
 
-@Getter
-@Setter
+@Data
 @AllArgsConstructor
 @Builder
 @FieldDefaults(makeFinal = false, level = AccessLevel.PRIVATE)

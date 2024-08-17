@@ -5,8 +5,7 @@ import ru.practicum.enums.RequestStatus;
 
 import java.util.Set;
 
-@Getter
-@Setter
+@Data
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder

@@ -3,13 +3,13 @@ package ru.practicum.exception;
 import com.fasterxml.jackson.annotation.JsonFormat;
 import lombok.AccessLevel;
 import lombok.Builder;
-import lombok.Getter;
+import lombok.Data;
 import lombok.experimental.FieldDefaults;
 
 import java.time.LocalDateTime;
 import java.util.List;
 
-@Getter
+@Data
 @Builder
 @FieldDefaults(makeFinal = true, level = AccessLevel.PRIVATE)
 public class ApiError {

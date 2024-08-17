@@ -11,8 +11,10 @@ import ru.practicum.service.RequestService;
 import jakarta.validation.constraints.Min;
 import java.util.List;
 
+import static ru.practicum.constant.PathConstant.*;
+
 @RestController
-@RequestMapping("users/{user-id}/requests")
+@RequestMapping(USERS_REQUESTS_PATH)
 @Slf4j
 @RequiredArgsConstructor
 @Validated
@@ -21,22 +23,22 @@ public class RequestsController {
 
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
-    public ParticipationRequestDto addRequest(@PathVariable("user-id") @Min(0) Integer userId,
-                                              @RequestParam("eventId") @Min(0) Integer eventId) {
+    public ParticipationRequestDto addRequest(@PathVariable(USER_ID) @Min(0) Integer userId,
+                                              @RequestParam(EVENT_ID) @Min(0) Integer eventId) {
         log.info("Поступил запрос на создание запроса на участие в событии с id= {}  пользователя с id= {}",
                 eventId, userId);
         return requestService.addNewRequest(userId, eventId);
     }
 
     @GetMapping
-    public List<ParticipationRequestDto> getAllRequests(@PathVariable("user-id") @Min(0) Integer userId) {
+    public List<ParticipationRequestDto> getAllRequests(@PathVariable(USER_ID) @Min(0) Integer userId) {
         log.info("Поступил запрос на получение всех запросов на участие в событиях пользователя с id= {}", userId);
         return requestService.getRequestsByUserId(userId);
     }
 
     @PatchMapping("/{request-id}/cancel")
-    public ParticipationRequestDto canceledRequest(@PathVariable("user-id") @Min(0) Integer userId,
-                                                   @PathVariable("request-id") @Min(0) Integer requestId) {
+    public ParticipationRequestDto canceledRequest(@PathVariable(USER_ID) @Min(0) Integer userId,
+                                                   @PathVariable(REQUEST_ID) @Min(0) Integer requestId) {
         log.info("Поступил запрос на отмену запроса пользователем с id= {}", userId);
         return requestService.cancelRequest(userId, requestId);
     }
