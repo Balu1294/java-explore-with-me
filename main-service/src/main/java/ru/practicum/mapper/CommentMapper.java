@@ -7,13 +7,15 @@ import ru.practicum.model.Comment;
 import ru.practicum.model.Event;
 import ru.practicum.model.User;
 
+import java.time.LocalDateTime;
+
 @UtilityClass
 public class CommentMapper {
     public static CommentDto toCommentDto(Comment comment) {
         return CommentDto.builder()
                 .id(comment.getId())
                 .text(comment.getText())
-                .authorName(comment.getAuthor().getName())
+                .authorId(comment.getAuthor().getId())
                 .created(comment.getCreated())
                 .lastUpdatedOn(comment.getLastUpdatedOn())
                 .build();
@@ -24,6 +26,8 @@ public class CommentMapper {
                 .text(commentDto.getText())
                 .event(event)
                 .author(user)
+                .created(LocalDateTime.now())
+                .lastUpdatedOn(null)
                 .build();
     }
 

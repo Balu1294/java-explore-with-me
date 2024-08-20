@@ -3,6 +3,7 @@ package ru.practicum.service;
 import ru.practicum.dto.CommentDto;
 import ru.practicum.dto.NewCommentDto;
 import ru.practicum.dto.UpdateCommentDto;
+import ru.practicum.model.Comment;
 
 import java.util.List;
 
@@ -13,7 +14,13 @@ public interface CommentService {
 
     List<CommentDto> getCommentUser(Integer userId);
 
-    List<CommentDto> getCommentEvent(Integer eventId);
+    Comment getUserCommentByUserAndCommentId(Integer userId, Integer commentId);
+
+    List<Comment> getCommentEvent(Integer eventId, Integer from, Integer size);
 
     void deleteComment(Integer userId, Integer commentId);
+
+    void deleteCommentByAdmin(Integer commentId);
+
+    List<Comment> search(String text, Integer from, Integer size);
 }

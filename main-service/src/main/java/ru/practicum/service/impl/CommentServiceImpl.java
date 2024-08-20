@@ -1,12 +1,15 @@
 package ru.practicum.service.impl;
 
-import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import ru.practicum.dto.CommentDto;
 import ru.practicum.dto.NewCommentDto;
 import ru.practicum.dto.UpdateCommentDto;
 import ru.practicum.enums.EventStatus;
+import ru.practicum.exception.IncorrectParametersException;
 import ru.practicum.exception.NotFoundException;
 import ru.practicum.mapper.CommentMapper;
 import ru.practicum.model.Comment;
@@ -17,6 +20,8 @@ import ru.practicum.repository.EventRepository;
 import ru.practicum.repository.UserRepository;
 import ru.practicum.service.CommentService;
 
+import java.time.LocalDateTime;
+import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -34,14 +39,19 @@ public class CommentServiceImpl implements CommentService {
         User user = checkUser(userId);
         Comment comment = checkComment(commentId);
         checkAuthorComment(user, comment);
-        if (updateCommentDto.getText() != null) {
-            comment.setText(updateCommentDto.getText());
+        LocalDateTime updateTime = LocalDateTime.now();
+
+        if (updateTime.isAfter(comment.getCreated().plusHours(1L))) {
+            throw new IncorrectParametersException("Сообщение возможно отредактировать только в течение часа");
         }
+
+        comment.setText(updateCommentDto.getText());
+        comment.setLastUpdatedOn(updateTime);
         return CommentMapper.toCommentDto(commentRepository.save(comment));
     }
 
     @Override
-    @Transactional
+    @Transactional(readOnly = true)
     public List<CommentDto> getCommentUser(Integer userId) {
         checkUser(userId);
         List<Comment> commentList = commentRepository.findByAuthor_Id(userId);
@@ -49,11 +59,19 @@ public class CommentServiceImpl implements CommentService {
     }
 
     @Override
-    @Transactional
-    public List<CommentDto> getCommentEvent(Integer eventId) {
-        Event event = checkEvent(eventId);
-        List<Comment> commentList = commentRepository.findAllByEventId(eventId);
-        return commentList.stream().map(CommentMapper::toCommentDto).collect(Collectors.toList());
+    @Transactional(readOnly = true)
+    public Comment getUserCommentByUserAndCommentId(Integer userId, Integer commentId) {
+        checkUser(userId);
+        return commentRepository.findByAuthor_IdAndId(userId, commentId).orElseThrow(() -> new NotFoundException(
+                String.format("У пользователя c id=%d  не найден комментарий с id=%d", userId, commentId)));
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<Comment> getCommentEvent(Integer eventId, Integer from, Integer size) {
+        checkEvent(eventId);
+        PageRequest pageable = PageRequest.of(from / size, size);
+        return commentRepository.findAllByEvent_Id(eventId, pageable);
     }
 
     @Override
@@ -64,13 +82,29 @@ public class CommentServiceImpl implements CommentService {
         commentRepository.deleteById(commentId);
     }
 
+    @Override
+    public void deleteCommentByAdmin(Integer commentId) {
+        Comment comment = checkComment(commentId);
+        commentRepository.deleteById(commentId);
+    }
+
+    @Override
+    @Transactional
+    public List<Comment> search(String text, Integer from, Integer size) {
+        Pageable pageable = PageRequest.of(from / size, size);
+        if (text.isBlank()) {
+            return Collections.emptyList();
+        }
+        return commentRepository.search(text, pageable);
+    }
+
     @Transactional
     @Override
     public CommentDto createComment(Integer userId, Integer eventId, NewCommentDto commentDto) {
         Event event = checkEvent(eventId);
         User user = checkUser(userId);
         if (!event.getEventStatus().equals(EventStatus.PUBLISHED)) {
-            throw new NotFoundException("Невозможно добавить комментарий к событию со статусом не PUBLISHED");
+            throw new IncorrectParametersException("Невозможно добавить комментарий к событию со статусом не PUBLISHED");
         }
         return CommentMapper.toCommentDto(commentRepository.save(CommentMapper.toComment(commentDto, event, user)));
     }
@@ -84,12 +118,12 @@ public class CommentServiceImpl implements CommentService {
     }
 
     private Comment checkComment(Integer id) {
-        return commentRepository.findById(id).orElseThrow(() -> new NotFoundException(String.format("Пользователь c id=%d  не найден", id)));
+        return commentRepository.findById(id).orElseThrow(() -> new NotFoundException(String.format("Комментарий c id=%d  не найден", id)));
     }
 
     private void checkAuthorComment(User user, Comment comment) {
         if (!comment.getAuthor().equals(user)) {
-            throw new NotFoundException("Пользователь не является автором комментария");
+            throw new IncorrectParametersException("Пользователь не является автором комментария");
         }
     }
 }

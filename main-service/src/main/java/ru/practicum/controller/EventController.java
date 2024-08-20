@@ -12,7 +12,6 @@ import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 import ru.practicum.dto.ParticipationRequestDto;
 import ru.practicum.dto.event.*;
-import ru.practicum.service.CommentService;
 import ru.practicum.service.EventService;
 
 import java.util.List;
@@ -26,7 +25,6 @@ import static ru.practicum.constant.PathConstant.*;
 @Slf4j
 public class EventController {
     private final EventService eventService;
-    private final CommentService commentService;
 
     @GetMapping("/events")
     public List<EventShortDto> getAllEvents(@Valid SearchEventParams searchEventParams,
