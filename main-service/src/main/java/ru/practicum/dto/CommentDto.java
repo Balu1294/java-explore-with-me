@@ -6,10 +6,11 @@ import lombok.experimental.FieldDefaults;
 
 import java.time.LocalDateTime;
 
-@Data
-@Builder
+@Getter
+@Setter
 @NoArgsConstructor
 @AllArgsConstructor
+@Builder
 @FieldDefaults(level = AccessLevel.PRIVATE)
 public class CommentDto {
     Integer id;

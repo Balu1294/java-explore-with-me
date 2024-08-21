@@ -2,6 +2,7 @@ package ru.practicum.service.impl;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Page;
@@ -29,7 +30,6 @@ import ru.practicum.model.*;
 import ru.practicum.repository.*;
 import ru.practicum.service.EventService;
 
-import jakarta.servlet.http.HttpServletRequest;
 import java.time.LocalDateTime;
 import java.util.*;
 import java.util.stream.Collectors;
@@ -297,39 +297,51 @@ public class EventServiceImpl implements EventService {
 
         if (searchEventParams.getText() != null) {
             String searchText = searchEventParams.getText().toLowerCase();
-            specification = specification.and((root, query, criteriaBuilder) -> criteriaBuilder.or(criteriaBuilder.like(criteriaBuilder.lower(root.get("annotation")), "%" + searchText + "%"), criteriaBuilder.like(criteriaBuilder.lower(root.get("description")), "%" + searchText + "%")));
+            specification = specification.and((root, query, criteriaBuilder) ->
+                    criteriaBuilder.or(
+                            criteriaBuilder.like(criteriaBuilder.lower(root.get("annotation")), "%" + searchText + "%"),
+                            criteriaBuilder.like(criteriaBuilder.lower(root.get("description")), "%" + searchText + "%")
+                    ));
         }
 
         if (searchEventParams.getCategories() != null && !searchEventParams.getCategories().isEmpty()) {
-            specification = specification.and((root, query, criteriaBuilder) -> root.get("category").get("id").in(searchEventParams.getCategories()));
+            specification = specification.and((root, query, criteriaBuilder) ->
+                    root.get("category").get("id").in(searchEventParams.getCategories()));
         }
 
         LocalDateTime startDateTime = Objects.requireNonNullElse(searchEventParams.getRangeStart(), now);
-        specification = specification.and((root, query, criteriaBuilder) -> criteriaBuilder.greaterThan(root.get("eventDate"), startDateTime));
+        specification = specification.and((root, query, criteriaBuilder) ->
+                criteriaBuilder.greaterThan(root.get("eventDate"), startDateTime));
 
         if (searchEventParams.getRangeEnd() != null) {
-            specification = specification.and((root, query, criteriaBuilder) -> criteriaBuilder.lessThan(root.get("eventDate"), searchEventParams.getRangeEnd()));
+            specification = specification.and((root, query, criteriaBuilder) ->
+                    criteriaBuilder.lessThan(root.get("eventDate"), searchEventParams.getRangeEnd()));
         }
 
         if (searchEventParams.getOnlyAvailable() != null) {
-            specification = specification.and((root, query, criteriaBuilder) -> criteriaBuilder.greaterThanOrEqualTo(root.get("participantLimit"), 0));
+            specification = specification.and((root, query, criteriaBuilder) ->
+                    criteriaBuilder.greaterThanOrEqualTo(root.get("participantLimit"), 0));
         }
 
-        specification = specification.and((root, query, criteriaBuilder) -> criteriaBuilder.equal(root.get("eventStatus"), EventStatus.PUBLISHED));
+        specification = specification.and((root, query, criteriaBuilder) ->
+                criteriaBuilder.equal(root.get("eventStatus"), EventStatus.PUBLISHED));
 
         List<Event> resultEvents = eventRepository.findAll(specification, pageable).getContent();
-        List<EventShortDto> result = resultEvents.stream().map(event -> toEventShortDto(event)).collect(Collectors.toList());
+        List<EventShortDto> result = resultEvents
+                .stream().map(event -> toEventShortDto(event)).collect(Collectors.toList());
         Map<Integer, Integer> viewStatsMap = getViewsAllEvents(resultEvents);
-//        List<CountCommentsByEventDto> commentsCountMap = commentRepository.countCommentByEvent(
-//                resultEvents.stream().map(Event::getId).collect(Collectors.toList()));
-//        Map<Integer, Integer> commentsCountToEventIdMap = commentsCountMap.stream().collect(Collectors.toMap(
-//                CountCommentsByEventDto::getEventId, CountCommentsByEventDto::getCountComments));
+
+        List<CountCommentsByEventDto> commentsCountMap = commentRepository.countCommentByEvent(
+                resultEvents.stream().map(Event::getId).collect(Collectors.toList()));
+        Map<Integer, Long> commentsCountToEventIdMap = commentsCountMap.stream().collect(Collectors.toMap(
+                CountCommentsByEventDto::getEventId, CountCommentsByEventDto::getCountComments));
 
         for (EventShortDto event : result) {
             Integer viewsFromMap = viewStatsMap.getOrDefault(event.getId(), 0);
             event.setViews(viewsFromMap);
-//            Integer commentCountFromMap = commentsCountToEventIdMap.getOrDefault(event.getId(), 0);
-//            event.setComments(commentCountFromMap);
+
+            Long commentCountFromMap = commentsCountToEventIdMap.getOrDefault(event.getId(), 0L);
+            event.setComments(commentCountFromMap);
         }
 
         return result;

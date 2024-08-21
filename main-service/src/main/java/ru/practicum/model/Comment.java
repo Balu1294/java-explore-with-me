@@ -1,5 +1,6 @@
 package ru.practicum.model;
 
+
 import jakarta.persistence.*;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
@@ -8,12 +9,13 @@ import org.hibernate.annotations.UpdateTimestamp;
 
 import java.time.LocalDateTime;
 
-@Data
+@Getter
+@Setter
 @AllArgsConstructor
 @NoArgsConstructor
 @Builder
-@Entity(name = "comments")
 @FieldDefaults(level = AccessLevel.PRIVATE)
+@Entity(name = "comments")
 public class Comment {
     @Id
     @Column(name = "id")

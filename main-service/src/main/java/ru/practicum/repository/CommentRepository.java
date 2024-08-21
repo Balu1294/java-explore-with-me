@@ -16,13 +16,8 @@ public interface CommentRepository extends JpaRepository<Comment, Integer> {
 
     Optional<Comment> findByAuthor_IdAndId(Integer userId, Integer id);
 
-    @Query("select c " +
-            "from comments as c " +
-            "where lower(c.text) like lower(concat('%', ?1, '%') )")
-    List<Comment> search(String text, Pageable pageable);
-
-//    @Query("select new ru.practicum.dto.CountCommentsByEventDto(c.event.id, COUNT(c)) " +
-//            "from comments as c where c.event.id in ?1 " +
-//            "GROUP BY c.event.id")
-//    List<CountCommentsByEventDto> countCommentByEvent(List<Integer> eventIds);
+    @Query("select new ru.practicum.dto.CountCommentsByEventDto(c.event.id, COUNT(c)) " +
+            "from comments as c where c.event.id in ?1 " +
+            "GROUP BY c.event.id")
+    List<CountCommentsByEventDto> countCommentByEvent(List<Integer> eventIds);
 }

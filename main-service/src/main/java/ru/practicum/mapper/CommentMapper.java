@@ -9,6 +9,7 @@ import ru.practicum.model.User;
 
 import java.time.LocalDateTime;
 
+
 @UtilityClass
 public class CommentMapper {
     public static CommentDto toCommentDto(Comment comment) {
@@ -28,12 +29,6 @@ public class CommentMapper {
                 .author(user)
                 .created(LocalDateTime.now())
                 .lastUpdatedOn(null)
-                .build();
-    }
-
-    public static Comment toComment(CommentDto commentDto) {
-        return Comment.builder()
-                .text(commentDto.getText())
                 .build();
     }
 }

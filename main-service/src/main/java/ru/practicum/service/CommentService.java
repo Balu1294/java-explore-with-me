@@ -8,19 +8,15 @@ import ru.practicum.model.Comment;
 import java.util.List;
 
 public interface CommentService {
-    CommentDto createComment(Integer userId, Integer eventId, NewCommentDto commentDto);
+    CommentDto addComment(Integer userId, Integer eventId, NewCommentDto commentDto);
 
-    CommentDto patchByUser(Integer userId, Integer commentId, UpdateCommentDto updateCommentDto);
+    CommentDto updateComment(Integer userId, Integer commentId, UpdateCommentDto updateCommentDto);
 
-    List<CommentDto> getCommentUser(Integer userId);
+    List<CommentDto> getCommentsByUser(Integer userId);
 
     Comment getUserCommentByUserAndCommentId(Integer userId, Integer commentId);
 
-    List<Comment> getCommentEvent(Integer eventId, Integer from, Integer size);
+    List<Comment> getCommentsByEvent(Integer eventId, Integer from, Integer size);
 
-    void deleteComment(Integer userId, Integer commentId);
-
-    void deleteCommentByAdmin(Integer commentId);
-
-    List<Comment> search(String text, Integer from, Integer size);
+    void removeComment(Integer userId, Integer commentId);
 }
