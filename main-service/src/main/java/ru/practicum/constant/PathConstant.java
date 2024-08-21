@@ -9,9 +9,11 @@ public class PathConstant {
     public static final String USERS_ID_EVENTS_ID_REQUESTS_PATH = "/users/{user-id}/events/{event-id}/requests";
     public static final String USERS_REQUESTS_PATH = "users/{user-id}/requests";
     public static final String ADMIN_USERS_PATH = "/admin/users";
+    public static final String COMMENTS_USER_ID_AND_COMMENT_ID_PATH = "/comments/users/{user-id}/{comment-id}";
     public static final String CAT_ID = "cat-id";
     public static final String COM_ID = "com-id";
     public static final String EVENT_ID = "event-id";
     public static final String USER_ID = "user-id";
     public static final String REQUEST_ID = "request-id";
+    public static final String COMMENT_ID = "comment-id";
 }

@@ -1,17 +1,17 @@
 package ru.practicum.model;
 
+import jakarta.persistence.*;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
 import ru.practicum.enums.EventStatus;
 
-import jakarta.persistence.*;
 import java.time.LocalDateTime;
 
-@Entity(name = "events")
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
+@Entity(name = "events")
 @FieldDefaults(level = AccessLevel.PRIVATE)
 public class Event {
     @Id
